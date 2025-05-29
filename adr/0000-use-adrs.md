@@ -25,13 +25,13 @@ Accepted
 
 ## Consequences
 
-Good things:
+**Good things:**
 
 - Clear history of design choices.
 - New team members learn faster.
 - Less time spent re-discussing old choices.
 
-Bad things / Risks:
+**Bad things / Risks:**
 
 - We must maintain the ADRs.
 - Takes time to write and update ADRs.

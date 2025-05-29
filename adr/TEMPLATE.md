@@ -17,3 +17,9 @@ Describe here the rationale for the design decision. Also indicate the rationale
 ## Consequences
 
 Describe here the resulting context, after applying the decision. All consequences should be listed, not just the "positive" ones.
+
+**Good things:**
+...
+
+**Bad things / Risks:**
+...
