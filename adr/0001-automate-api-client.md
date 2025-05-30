@@ -6,7 +6,7 @@ Right now we hand-write our API calls [`lib/api.ts`](https://github.com/GenesisE
 
 We will adopt [openapi-zod-client](https://www.npmjs.com/package/openapi-zod-client) to generate both a typed HTTP client (via Zodios) and Zod schemas directly from our OpenAPI spec. To ensure the spec and generated code remain current, we will create a CI job that:
 
-1. Clones the backend repository, starts the local server, and fetches the latest OpenAPI YAML (`https://localhost:8000/documentation/yaml`).
+1. Gets the latest OpenAPI specification from the backend repository (the method of getting it depends on communication with the backend team: it is desirable that the current specification is always generated in their repository, so we can just fetch it from there)
 2. Runs `openapi-zod-client` for the received YAML, producing the generated code (for example, to `src/generated/api.ts`).
 3. Commits and pushes any changes to `src/generated/api.ts` if updates are detected.
 
