@@ -87,6 +87,8 @@ export const tracksApi = {
   },
 
   async uploadTrackFile(trackId: string, file: File) {
+    // * implemented manually
+    // * client generator didn't handle multipart/form-data correctly
     const formData = new FormData();
     formData.append("file", file);
 
