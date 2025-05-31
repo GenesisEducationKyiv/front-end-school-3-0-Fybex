@@ -1,15 +1,15 @@
-import { X } from 'lucide-react';
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import { useAudioPlayerStore } from '@/components/player/use-audio-player-store';
-import { Button } from '@/components/ui/button';
-import useEventListener from '@/hooks/use-event-listener';
-import { API_BASE_URL } from '@/lib/api';
+import { useAudioPlayerStore } from "@/components/player/use-audio-player-store";
+import { Button } from "@/components/ui/button";
+import useEventListener from "@/hooks/use-event-listener";
+import { getTrackAudioUrl } from "@/lib/api/tracks";
 
-import PlayerControls from './controls';
-import SeekBar from './seek-bar';
-import TrackInfo from './track-info';
-import VolumeControl from './volume-control';
+import PlayerControls from "./controls";
+import SeekBar from "./seek-bar";
+import TrackInfo from "./track-info";
+import VolumeControl from "./volume-control";
 
 export default function AudioPlayer() {
   const playerRef = useRef<HTMLDivElement>(null);
@@ -20,7 +20,7 @@ export default function AudioPlayer() {
   const setIsPlaying = useAudioPlayerStore((state) => state.setIsPlaying);
   const close = useAudioPlayerStore((state) => state.close);
   const setTogglePlayPauseFn = useAudioPlayerStore(
-    (state) => state.setTogglePlayPauseFn,
+    (state) => state.setTogglePlayPauseFn
   );
 
   const [currentTime, setCurrentTime] = useState(0);
@@ -29,15 +29,12 @@ export default function AudioPlayer() {
   const [previousVolume, setPreviousVolume] = useState(1);
   const [isSeeking, setIsSeeking] = useState(false);
 
-  const audioUrl = track?.audioFile
-    ? `${API_BASE_URL}/files/${track.audioFile}`
-    : undefined;
-
+  const audioUrl = track?.audioFile ? getTrackAudioUrl(track.audioFile) : null;
   useEffect(() => {
     if (audioRef.current) {
       setCurrentTime(0);
       setDuration(0);
-      audioRef.current.src = audioUrl || '';
+      audioRef.current.src = audioUrl ?? "";
       if (audioUrl) {
         audioRef.current.load();
       } else {
@@ -60,7 +57,9 @@ export default function AudioPlayer() {
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play().catch((e) => console.warn('Play prevented:', e));
+      audioRef.current.play().catch((e: unknown) => {
+        console.warn("Play prevented:", e);
+      });
     }
   }, [isPlaying, track]);
 
@@ -71,15 +70,15 @@ export default function AudioPlayer() {
     };
   }, [handlePlayPause, setTogglePlayPauseFn]);
 
-  const handleSeek = useCallback((value: number[]) => {
+  const handleSeek = useCallback((value: number) => {
     if (!audioRef.current) return;
-    const newTime = value[0];
+    const newTime = value;
     audioRef.current.currentTime = newTime;
     setCurrentTime(newTime);
   }, []);
 
-  const handleVolumeChange = useCallback((value: number[]) => {
-    const newVolume = value[0];
+  const handleVolumeChange = useCallback((value: number) => {
+    const newVolume = value;
     setVolume(newVolume);
     if (newVolume > 0) {
       setPreviousVolume(newVolume);
@@ -89,10 +88,10 @@ export default function AudioPlayer() {
   const handleMuteToggle = useCallback(() => {
     if (volume > 0) {
       setPreviousVolume(volume);
-      handleVolumeChange([0]);
+      handleVolumeChange(0);
     } else {
       const restoreVolume = previousVolume > 0 ? previousVolume : 1;
-      handleVolumeChange([restoreVolume]);
+      handleVolumeChange(restoreVolume);
     }
   }, [volume, previousVolume, handleVolumeChange]);
 
@@ -109,12 +108,12 @@ export default function AudioPlayer() {
       const shouldBePlaying = useAudioPlayerStore.getState().isPlaying;
 
       if (shouldBePlaying) {
-        audioRef.current.play().catch((e) => {
-          console.warn('Autoplay prevented on metadata load:', e);
+        audioRef.current.play().catch((e: unknown) => {
+          console.warn("Autoplay prevented on metadata load:", e);
           setIsPlaying(false);
         });
       } else {
-        if (audioRef.current && !audioRef.current.paused) {
+        if (!audioRef.current.paused) {
           audioRef.current.pause();
         }
         setIsPlaying(false);
@@ -122,8 +121,12 @@ export default function AudioPlayer() {
     }
   };
 
-  const handlePlay = () => setIsPlaying(true);
-  const handlePause = () => setIsPlaying(false);
+  const handlePlay = () => {
+    setIsPlaying(true);
+  };
+  const handlePause = () => {
+    setIsPlaying(false);
+  };
   const handleEnded = () => {
     setIsPlaying(false);
     setCurrentTime(0);
@@ -141,21 +144,27 @@ export default function AudioPlayer() {
     }
   };
 
-  const handleSeekPointerDown = () => setIsSeeking(true);
-  const handleSeekPointerUp = () => setIsSeeking(false);
+  const handleSeekPointerDown = () => {
+    setIsSeeking(true);
+  };
+  const handleSeekPointerUp = () => {
+    setIsSeeking(false);
+  };
 
-  useEventListener('keydown', (e) => {
-    const target = e.target as HTMLElement;
-    const tag = target?.tagName?.toLowerCase();
+  useEventListener("keydown", (e) => {
+    const target = e.target;
+    if (!(target instanceof HTMLElement)) return;
+
+    const tag = target.tagName.toLowerCase();
     if (
-      tag === 'input' ||
-      tag === 'textarea' ||
-      tag === 'select' ||
-      target?.isContentEditable
+      tag === "input" ||
+      tag === "textarea" ||
+      tag === "select" ||
+      target.isContentEditable
     )
       return;
 
-    if (e.code === 'Space' || e.key === ' ') {
+    if (e.code === "Space" || e.key === " ") {
       e.preventDefault();
       const toggleFn = useAudioPlayerStore.getState()._toggleFn;
       toggleFn?.();
@@ -166,53 +175,59 @@ export default function AudioPlayer() {
 
   return (
     <div
-      ref={playerRef}
-      className='fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border shadow-lg flex items-center px-4 py-2 gap-4'
-      style={{ height: 80 }}
+      className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border shadow-lg flex items-center px-4 py-2 gap-4"
       data-testid={`audio-player-${track.id}`}
+      ref={playerRef}
+      style={{ height: 80 }}
     >
       <TrackInfo track={track} />
 
-      <div className='flex-grow min-w-0 flex items-center gap-3 px-2'>
+      <div className="flex-grow min-w-0 flex items-center gap-3 px-2">
         <PlayerControls trackId={track.id} />
         <SeekBar
           currentTime={currentTime}
           duration={duration}
           isSeeking={isSeeking}
-          onSeek={handleSeek}
+          trackId={track.id}
+          onSeek={(value) => {
+            if (value[0] !== undefined) {
+              handleSeek(value[0]);
+            }
+          }}
           onSeekPointerDown={handleSeekPointerDown}
           onSeekPointerUp={handleSeekPointerUp}
-          trackId={track.id}
         />
       </div>
 
-      <div className='flex items-center gap-2 flex-shrink-0 relative'>
+      <div className="flex items-center gap-2 flex-shrink-0 relative">
         <VolumeControl
           volume={volume}
-          onVolumeChange={handleVolumeChange}
           onMuteToggle={handleMuteToggle}
+          onVolumeChange={handleVolumeChange}
         />
         <Button
-          variant='ghost'
-          size='icon'
-          className='rounded-full hover:bg-muted w-8 h-8'
+          aria-label="Close player"
+          className="rounded-full hover:bg-muted w-8 h-8"
+          size="icon"
+          variant="ghost"
           onClick={close}
-          aria-label='Close player'
         >
-          <X className='w-5 h-5' />
+          <X className="w-5 h-5" />
         </Button>
       </div>
 
       <audio
+        className="absolute -left-[9999px] top-0"
         ref={audioRef}
-        onPlay={handlePlay}
-        onPause={handlePause}
         onEnded={handleEnded}
-        onTimeUpdate={handleTimeUpdate}
+        onError={(e) => {
+          console.error("Audio error:", e);
+        }}
         onLoadedMetadata={handleLoadedMetadata}
+        onPause={handlePause}
+        onPlay={handlePlay}
+        onTimeUpdate={handleTimeUpdate}
         onVolumeChange={handleAudioVolumeChange}
-        onError={(e) => console.error('Audio error:', e)}
-        className='absolute -left-[9999px] top-0'
       >
         Your browser does not support the audio element.
       </audio>

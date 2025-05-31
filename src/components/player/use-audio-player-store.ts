@@ -1,14 +1,14 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
-import { Track } from '@/lib/schemas';
+import { type TrackWithId } from "@/lib/api/types";
 
 type ToggleFn = (() => void) | null;
 
 interface AudioPlayerState {
-  track: Track | null;
+  track: TrackWithId | null;
   isPlaying: boolean;
   _toggleFn: ToggleFn;
-  setTrack: (track: Track | null) => void;
+  setTrack: (track: TrackWithId | null) => void;
   setIsPlaying: (isPlaying: boolean) => void;
   close: () => void;
   setTogglePlayPauseFn: (fn: ToggleFn) => void;
@@ -20,11 +20,19 @@ export const useAudioPlayerStore = create<AudioPlayerState>((set, get) => ({
   isPlaying: false,
   _toggleFn: null,
 
-  setTrack: (track) => set({ track, isPlaying: !!track }),
-  setIsPlaying: (isPlaying) => set({ isPlaying }),
-  close: () => set({ track: null, isPlaying: false, _toggleFn: null }),
+  setTrack: (track) => {
+    set({ track, isPlaying: !!track });
+  },
+  setIsPlaying: (isPlaying) => {
+    set({ isPlaying });
+  },
+  close: () => {
+    set({ track: null, isPlaying: false, _toggleFn: null });
+  },
 
-  setTogglePlayPauseFn: (fn) => set({ _toggleFn: fn }),
+  setTogglePlayPauseFn: (fn) => {
+    set({ _toggleFn: fn });
+  },
 
   togglePlayPause: () => {
     get()._toggleFn?.();

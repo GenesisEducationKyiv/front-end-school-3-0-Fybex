@@ -1,90 +1,100 @@
-import { ColumnDef } from '@tanstack/react-table';
-import { Play, Pause } from 'lucide-react';
+import { type ColumnDef } from "@tanstack/react-table";
+import { Pause, Play } from "lucide-react";
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { TrackCover } from '@/components/ui/track-cover';
-import { Track } from '@/lib/schemas';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { TrackCover } from "@/components/ui/track-cover";
+import { type TrackWithId } from "@/lib/api/types";
 
-import { TrackActions } from './actions';
+import { TrackActions } from "./actions";
 
-interface TrackTableMeta {
-  onPlayTrack?: (track: Track) => void;
-  globalTrack?: Track | null;
-  isPlaying?: boolean;
+// Column-specific meta type
+export interface ColumnMeta {
+  className?: string;
+  skeletonHeight?: string;
 }
 
-const selectionColumn: ColumnDef<Track, unknown> = {
-  id: 'select',
+// Table-level meta type
+export interface TrackTableMeta {
+  currentTrack: TrackWithId | null;
+  isPlaying: boolean;
+  onPlayTrack: (track: TrackWithId) => void;
+}
+
+const selectionColumn: ColumnDef<TrackWithId> = {
+  id: "select",
   header: ({ table }) => (
     <Checkbox
+      aria-label="Select all rows"
       checked={table.getIsAllPageRowsSelected()}
-      onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-      aria-label='Select all rows'
-      className='translate-y-[2px]'
-      data-testid='select-all'
+      className="translate-y-[2px]"
+      data-testid="select-all"
+      onCheckedChange={(value) => {
+        table.toggleAllPageRowsSelected(!!value);
+      }}
     />
   ),
   cell: ({ row }) => (
     <Checkbox
+      aria-label="Select row"
       checked={row.getIsSelected()}
-      onCheckedChange={(value) => row.toggleSelected(!!value)}
-      aria-label='Select row'
-      className='translate-y-[2px]'
+      className="translate-y-[2px]"
       data-testid={`track-checkbox-${row.original.id}`}
-      onClick={(e) => e.stopPropagation()}
+      onCheckedChange={(value) => {
+        row.toggleSelected(!!value);
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
     />
   ),
   enableSorting: false,
   enableHiding: false,
   size: 48,
   meta: {
-    className: 'w-[48px] text-center px-1',
+    className: "w-[48px] text-center px-1",
   },
 };
 
-export const columns: ColumnDef<Track, unknown>[] = [
+export const columns: ColumnDef<TrackWithId>[] = [
   selectionColumn,
   {
-    accessorKey: 'coverImage',
-    header: '',
+    accessorKey: "coverImage",
+    header: "",
     cell: ({ row, table }) => {
       const track = row.original;
       const cover = track.coverImage;
-      const meta = table.options.meta as TrackTableMeta;
-      const isCurrent = meta.globalTrack?.id === track.id;
+      const meta = table.options.meta as TrackTableMeta | undefined;
+      const isCurrent = meta?.currentTrack?.id === track.id;
       const showPlayButton = !!track.audioFile;
+      const IconComponent = isCurrent && meta.isPlaying ? Pause : Play;
 
       return (
-        <div className='relative w-10 h-10'>
+        <div className="relative w-10 h-10">
           <TrackCover
-            src={cover}
-            alt={track.title}
-            className='w-full h-full'
+            alt={track.title ?? "Track"}
+            className="w-full h-full"
             iconSize={16}
+            src={cover ?? null}
           />
           {showPlayButton && (
             <Button
-              variant='ghost'
-              size='icon'
-              className='absolute inset-0 flex items-center justify-center w-full h-full rounded bg-black/20 hover:bg-black/40 transition-colors opacity-0 group-hover:opacity-100 focus-within:opacity-100'
-              onClick={(e) => {
-                e.stopPropagation();
-                meta.onPlayTrack?.(track);
-              }}
               aria-label={
                 isCurrent && meta.isPlaying
-                  ? `Pause ${track.title}`
-                  : `Play ${track.title}`
+                  ? `Pause ${track.title ?? "Track"}`
+                  : `Play ${track.title ?? "Track"}`
               }
-              type='button'
+              className="absolute inset-0 flex items-center justify-center w-full h-full rounded bg-black/20 hover:bg-black/40 transition-colors opacity-0 group-hover:opacity-100 focus-within:opacity-100"
+              size="icon"
+              type="button"
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                meta?.onPlayTrack(track);
+              }}
             >
-              {isCurrent && meta.isPlaying ? (
-                <Pause className='w-4 h-4 text-white' />
-              ) : (
-                <Play className='w-4 h-4 text-white' />
-              )}
+              <IconComponent className="w-4 h-4 text-white" />
             </Button>
           )}
         </div>
@@ -94,58 +104,75 @@ export const columns: ColumnDef<Track, unknown>[] = [
     minSize: 40,
     maxSize: 56,
     meta: {
-      className: 'w-[56px] p-1',
-      skeletonHeight: 'h-10',
+      className: "w-[56px] p-1",
+      skeletonHeight: "h-10",
     },
     enableSorting: false,
   },
   {
-    accessorKey: 'title',
-    header: 'Title',
+    accessorKey: "title",
+    header: "Title",
     cell: ({ row }) => (
       <span data-testid={`track-item-${row.original.id}-title`}>
-        {row.original.title}
+        {row.original.title ?? "Unknown Title"}
       </span>
     ),
+    meta: {
+      className: "text-center",
+    },
   },
   {
-    accessorKey: 'artist',
-    header: 'Artist',
+    accessorKey: "artist",
+    header: "Artist",
     cell: ({ row }) => (
       <span data-testid={`track-item-${row.original.id}-artist`}>
-        {row.original.artist}
+        {row.original.artist ?? "Unknown Artist"}
       </span>
     ),
+    meta: {
+      className: "text-center",
+    },
   },
   {
-    accessorKey: 'album',
-    header: 'Album',
-    cell: ({ row }) => row.original.album || '-',
+    accessorKey: "album",
+    header: "Album",
+    cell: ({ row }) => row.original.album ?? "-",
+    meta: {
+      className: "text-center",
+    },
   },
   {
-    accessorKey: 'genres',
-    header: 'Genres',
+    accessorKey: "genres",
+    header: "Genres",
     cell: ({ row }) => (
-      <div className='flex flex-wrap gap-1'>
-        {row.original.genres.map((genre: string) => (
-          <Badge key={genre} variant='secondary'>
+      <div className="flex flex-wrap gap-1">
+        {(row.original.genres ?? []).map((genre: string) => (
+          <Badge key={genre} variant="secondary">
             {genre}
           </Badge>
         ))}
       </div>
     ),
     enableSorting: false,
+    meta: {
+      className: "text-center",
+    },
   },
   {
-    id: 'actions',
-    header: '',
+    id: "actions",
+    header: "",
     cell: ({ row }) => <TrackActions track={row.original} />,
     size: 32,
     minSize: 24,
     maxSize: 40,
     meta: {
-      className: 'w-[32px] text-right',
-      skeletonHeight: 'h-6',
+      className: "w-[32px] text-right",
+      skeletonHeight: "h-6",
     },
   },
 ];
+
+// Helper to convert TypedColumnDef to ColumnDef for TanStack Table
+export const getColumnDefs = (): ColumnDef<TrackWithId>[] => {
+  return columns;
+};

@@ -1,7 +1,7 @@
-import { ImageIcon } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { ImageIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 interface TrackCoverProps extends React.HTMLAttributes<HTMLDivElement> {
   src?: string | null;
@@ -26,8 +26,8 @@ export function TrackCover({
   return (
     <div
       className={cn(
-        'relative flex items-center justify-center overflow-hidden rounded bg-muted aspect-square',
-        className,
+        "relative flex items-center justify-center overflow-hidden rounded bg-muted aspect-square",
+        className
       )}
       {...props}
     >
@@ -36,13 +36,13 @@ export function TrackCover({
           key={src}
           src={src}
           alt={alt}
-          className={cn('h-full w-full object-cover')}
+          className={cn("h-full w-full object-cover")}
           onError={() => setHasError(true)}
-          loading='lazy'
+          loading="lazy"
         />
       )}
       {showError && (
-        <div className='absolute inset-0 flex items-center justify-center text-muted-foreground/50'>
+        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/50">
           <ImageIcon size={iconSize} aria-label={alt} />
         </div>
       )}

@@ -1,8 +1,7 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 import {
   Dialog,
@@ -11,17 +10,15 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { useApiQuery } from '@/hooks/use-api-query';
-import { createTrack, fetchGenres } from '@/lib/api';
-import { queryKeys } from '@/lib/query-keys';
+} from "@/components/ui/dialog";
+import { useGetGenres } from "@/lib/api/genres";
 import {
   createTrackSchema,
-  CreateTrackFormData,
-  GenresResponse,
-} from '@/lib/schemas';
+  useCreateTrack,
+  type CreateTrackFormData,
+} from "@/lib/api/tracks";
 
-import { BaseForm } from './base-form';
+import { BaseForm } from "./base-form";
 
 interface CreateTrackDialogProps {
   children: React.ReactNode;
@@ -29,40 +26,34 @@ interface CreateTrackDialogProps {
 
 function CreateTrackDialog({ children }: CreateTrackDialogProps) {
   const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
 
-  const { data: availableGenres = [] } = useApiQuery<GenresResponse, Error>({
-    queryKey: queryKeys.genres.list(),
-    queryFn: fetchGenres,
-  });
+  const { data: availableGenres = [] } = useGetGenres();
 
   const form = useForm<CreateTrackFormData>({
     resolver: zodResolver(createTrackSchema),
     defaultValues: {
-      title: '',
-      artist: '',
-      album: '',
+      title: "",
+      artist: "",
+      album: "",
       genres: [],
-      coverImage: '',
+      coverImage: "",
     },
-    mode: 'onChange',
+    mode: "onChange",
   });
 
-  const mutation = useMutation<unknown, Error, CreateTrackFormData>({
-    mutationFn: createTrack,
-    onSuccess: () => {
-      toast.success('Track created successfully!');
-      queryClient.invalidateQueries({ queryKey: queryKeys.tracks.all });
-      form.reset();
-      setOpen(false);
-    },
-    onError: (error) => {
-      toast.error(`Failed to create track: ${error.message}`);
-    },
-  });
+  const mutation = useCreateTrack();
 
   const onSubmit = (data: CreateTrackFormData) => {
-    mutation.mutate(data);
+    mutation.mutate(data, {
+      onSuccess: () => {
+        toast.success("Track created successfully!");
+        form.reset();
+        setOpen(false);
+      },
+      onError: (error: Error) => {
+        toast.error(`Failed to create track: ${error.message}`);
+      },
+    });
   };
 
   useEffect(() => {
@@ -74,7 +65,7 @@ function CreateTrackDialog({ children }: CreateTrackDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className='sm:max-w-[425px]'>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create New Track</DialogTitle>
           <DialogDescription>
@@ -82,13 +73,15 @@ function CreateTrackDialog({ children }: CreateTrackDialogProps) {
           </DialogDescription>
         </DialogHeader>
         <BaseForm
-          form={form}
-          onSubmit={onSubmit}
-          isLoading={mutation.isPending}
-          submitButtonText='Create Track'
           availableGenres={availableGenres}
-          onCancel={() => setOpen(false)}
-          dialogType='create'
+          dialogType="create"
+          form={form}
+          isLoading={mutation.isPending}
+          submitButtonText="Create Track"
+          onCancel={() => {
+            setOpen(false);
+          }}
+          onSubmit={onSubmit}
         />
       </DialogContent>
     </Dialog>

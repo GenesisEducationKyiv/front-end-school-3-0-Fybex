@@ -1,6 +1,5 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ReactNode, useState } from 'react';
-import { toast } from 'sonner';
+import { type ReactNode, useState } from "react";
+import { toast } from "sonner";
 
 import {
   AlertDialog,
@@ -12,13 +11,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { deleteTrack } from '@/lib/api';
-import { queryKeys } from '@/lib/query-keys';
-import { Track } from '@/lib/schemas';
+} from "@/components/ui/alert-dialog";
+import { useDeleteTrack } from "@/lib/api/tracks";
+import { type TrackWithId } from "@/lib/api/types";
 
 interface DeleteTrackDialogProps {
-  track: Track;
+  track: TrackWithId;
   children: ReactNode;
   onDialogClose?: () => void;
 }
@@ -29,23 +27,22 @@ function DeleteTrackDialog({
   onDialogClose,
 }: DeleteTrackDialogProps) {
   const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
 
-  const mutation = useMutation<void, Error, string>({
-    mutationFn: deleteTrack,
-    onSuccess: () => {
-      toast.success(`Track "${track.title}" deleted successfully!`);
-      queryClient.invalidateQueries({ queryKey: queryKeys.tracks.all });
-      setOpen(false);
-    },
-    onError: (error) => {
-      toast.error(`Failed to delete track: ${error.message}`);
-      setOpen(false);
-    },
-  });
+  const mutation = useDeleteTrack();
 
   const handleDelete = () => {
-    mutation.mutate(track.id);
+    mutation.mutate(track.id, {
+      onSuccess: () => {
+        toast.success(
+          `Track "${track.title ?? "Unknown"}" deleted successfully!`
+        );
+        setOpen(false);
+      },
+      onError: (error: Error) => {
+        toast.error(`Failed to delete track: ${error.message}`);
+        setOpen(false);
+      },
+    });
   };
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -58,26 +55,30 @@ function DeleteTrackDialog({
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
-      <AlertDialogContent data-testid='confirm-dialog'>
+      <AlertDialogContent data-testid="confirm-dialog">
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
             This action cannot be undone. This will permanently delete the track
-            <span className='font-semibold'> {track.title}</span> by
-            <span className='font-semibold'> {track.artist}</span>.
+            <span className="font-semibold">
+              {" "}
+              {track.title ?? "Unknown"}
+            </span>{" "}
+            by
+            <span className="font-semibold"> {track.artist ?? "Unknown"}</span>.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel data-testid='cancel-delete'>
+          <AlertDialogCancel data-testid="cancel-delete">
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
-            onClick={handleDelete}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            data-testid="confirm-delete"
             disabled={mutation.isPending}
-            className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
-            data-testid='confirm-delete'
+            onClick={handleDelete}
           >
-            {mutation.isPending ? 'Deleting...' : 'Delete'}
+            {mutation.isPending ? "Deleting..." : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

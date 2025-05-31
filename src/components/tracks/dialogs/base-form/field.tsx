@@ -1,22 +1,21 @@
-import React from 'react';
+import React from "react";
 import {
-  UseFormReturn,
-  FieldError,
-  FieldErrors,
-  FieldValues,
-  Path,
-} from 'react-hook-form';
+  type FieldErrors,
+  type FieldValues,
+  type Path,
+  type UseFormReturn,
+} from "react-hook-form";
 
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 const getErrorMessage = <TFieldValues extends FieldValues>(
   errors: FieldErrors<TFieldValues>,
-  name: Path<TFieldValues>,
+  name: Path<TFieldValues>
 ): string | undefined => {
-  const error = errors[name] as FieldError | undefined;
-  if (error && typeof error.message === 'string') {
+  const error = errors[name];
+  if (error && typeof error.message === "string") {
     return error.message;
   }
   return undefined;
@@ -25,7 +24,7 @@ const getErrorMessage = <TFieldValues extends FieldValues>(
 interface FormFieldProps<TFieldValues extends FieldValues>
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
-    'name' | 'id' | 'form'
+    "name" | "id" | "form"
   > {
   name: Path<TFieldValues>;
   label: string;
@@ -40,9 +39,9 @@ export function FormField<TFieldValues extends FieldValues>({
   name,
   label,
   form,
-  labelClassName = 'text-right',
-  errorClassName = 'col-span-4 text-red-500 text-sm text-right',
-  wrapperClassName = 'grid grid-cols-4 items-center gap-4',
+  labelClassName = "text-right",
+  errorClassName = "col-span-4 text-red-500 text-sm text-right",
+  wrapperClassName = "grid grid-cols-4 items-center gap-4",
   className,
   dataTestId,
   ...inputProps
@@ -52,22 +51,22 @@ export function FormField<TFieldValues extends FieldValues>({
 
   return (
     <div className={wrapperClassName}>
-      <Label htmlFor={name} className={labelClassName}>
+      <Label className={labelClassName} htmlFor={name}>
         {label}
       </Label>
       <Input
         id={name}
         {...form.register(name)}
-        className={cn('col-span-3', className)}
-        aria-invalid={hasError ? 'true' : 'false'}
+        aria-invalid={hasError ? "true" : "false"}
+        className={cn("col-span-3", className)}
         data-testid={dataTestId}
         {...inputProps}
       />
       {hasError && (
         <p
           className={errorClassName}
-          role='alert'
           data-testid={`error-${name}`}
+          role="alert"
         >
           {errorMessage}
         </p>

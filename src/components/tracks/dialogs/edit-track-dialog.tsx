@@ -1,8 +1,7 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 import {
   Dialog,
@@ -10,90 +9,91 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { useApiQuery } from '@/hooks/use-api-query';
-import { updateTrack, fetchGenres } from '@/lib/api';
-import { queryKeys } from '@/lib/query-keys';
+} from "@/components/ui/dialog";
+import { useGetGenres } from "@/lib/api/genres";
 import {
   editTrackSchema,
-  EditTrackFormData,
-  Track,
-  GenresResponse,
-} from '@/lib/schemas';
+  useUpdateTrack,
+  type EditTrackFormData,
+} from "@/lib/api/tracks";
+import { type TrackWithId } from "@/lib/api/types";
 
-import { BaseForm } from './base-form';
+import { BaseForm } from "./base-form";
 
 interface EditTrackDialogProps {
-  track: Track;
+  track: TrackWithId;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 function EditTrackDialog({ track, open, onOpenChange }: EditTrackDialogProps) {
-  const queryClient = useQueryClient();
-
-  const { data: availableGenres = [] } = useApiQuery<GenresResponse, Error>({
-    queryKey: queryKeys.genres.list(),
-    queryFn: fetchGenres,
-  });
+  const { data: availableGenres = [] } = useGetGenres();
 
   const form = useForm<EditTrackFormData>({
     resolver: zodResolver(editTrackSchema),
     defaultValues: {
-      title: track.title,
-      artist: track.artist,
-      album: track.album || '',
-      genres: track.genres || [],
-      coverImage: track.coverImage || '',
+      title: track.title ?? "",
+      artist: track.artist ?? "",
+      album: track.album ?? "",
+      genres: track.genres ?? [],
+      coverImage: track.coverImage ?? "",
     },
-    mode: 'onChange',
+    mode: "onChange",
   });
 
   useEffect(() => {
     if (open) {
       form.reset({
-        title: track.title,
-        artist: track.artist,
-        album: track.album || '',
-        genres: track.genres || [],
-        coverImage: track.coverImage || '',
+        title: track.title ?? "",
+        artist: track.artist ?? "",
+        album: track.album ?? "",
+        genres: track.genres ?? [],
+        coverImage: track.coverImage ?? "",
       });
     }
   }, [track, open, form]);
 
-  const mutation = useMutation<Track, Error, EditTrackFormData>({
-    mutationFn: (data) => updateTrack(track.id, data),
-    onSuccess: (updatedTrack) => {
-      toast.success(`Track "${updatedTrack.title}" updated successfully!`);
-      queryClient.invalidateQueries({ queryKey: queryKeys.tracks.all });
-      onOpenChange(false);
-    },
-    onError: (error) => {
-      toast.error(`Failed to update track: ${error.message}`);
-    },
-  });
+  const mutation = useUpdateTrack();
 
   const onSubmit = (data: EditTrackFormData) => {
-    mutation.mutate(data);
+    console.log("Edit track form submitted:", { trackId: track.id, data });
+    mutation.mutate(
+      { id: track.id, data },
+      {
+        onSuccess: (updatedTrack) => {
+          console.log("Track updated successfully:", updatedTrack);
+          toast.success(
+            `Track "${updatedTrack.title ?? "Unknown"}" updated successfully!`
+          );
+          onOpenChange(false);
+        },
+        onError: (error: Error) => {
+          console.error("Failed to update track:", error);
+          toast.error(`Failed to update track: ${error.message}`);
+        },
+      }
+    );
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-[425px]'>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit Track: {track.title}</DialogTitle>
+          <DialogTitle>Edit Track: {track.title ?? "Unknown"}</DialogTitle>
           <DialogDescription>
             Update the details for this track.
           </DialogDescription>
         </DialogHeader>
         <BaseForm
-          form={form}
-          onSubmit={onSubmit}
-          isLoading={mutation.isPending}
-          submitButtonText='Save Changes'
           availableGenres={availableGenres}
-          onCancel={() => onOpenChange(false)}
-          dialogType='edit'
+          dialogType="edit"
+          form={form}
+          isLoading={mutation.isPending}
+          submitButtonText="Save Changes"
+          onCancel={() => {
+            onOpenChange(false);
+          }}
+          onSubmit={onSubmit}
         />
       </DialogContent>
     </Dialog>

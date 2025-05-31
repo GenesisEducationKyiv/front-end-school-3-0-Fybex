@@ -1,91 +1,94 @@
-import { UseFormReturn } from 'react-hook-form';
+import { type UseFormReturn } from "react-hook-form";
 
-import { FormField } from '@/components/tracks/dialogs/base-form/field';
-import { GenreSelector } from '@/components/tracks/dialogs/base-form/genres-selector';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { CreateTrackFormData, GenresResponse } from '@/lib/schemas';
+import { FormField } from "@/components/tracks/dialogs/base-form/field";
+import { GenreSelector } from "@/components/tracks/dialogs/base-form/genres-selector";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { type CreateTrackFormData } from "@/lib/api/tracks";
 
 interface BaseFormProps {
   form: UseFormReturn<CreateTrackFormData>;
-  onSubmit: (data: CreateTrackFormData) => void;
   isLoading: boolean;
   submitButtonText: string;
-  availableGenres: GenresResponse;
+  availableGenres: string[];
+  dialogType: "create" | "edit";
+  onSubmit: (data: CreateTrackFormData) => void;
   onCancel?: () => void;
-  dialogType: 'create' | 'edit';
 }
 
 export function BaseForm({
   form,
-  onSubmit,
   isLoading,
   submitButtonText,
-  availableGenres = [],
-  onCancel,
+  availableGenres,
   dialogType,
+  onSubmit,
+  onCancel,
 }: BaseFormProps) {
   return (
     <form
-      onSubmit={form.handleSubmit(onSubmit)}
-      className='grid gap-4 py-4'
-      data-testid='track-form'
+      className="grid gap-4 py-4"
+      data-testid="track-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        void form.handleSubmit(onSubmit)(e);
+      }}
     >
       <FormField
-        name='title'
-        label='Title'
+        dataTestId="input-title"
         form={form}
-        placeholder='e.g. Bohemian Rhapsody'
-        dataTestId='input-title'
+        label="Title"
+        name="title"
+        placeholder="e.g. Bohemian Rhapsody"
       />
       <FormField
-        name='artist'
-        label='Artist'
+        dataTestId="input-artist"
         form={form}
-        placeholder='e.g. Queen'
-        dataTestId='input-artist'
+        label="Artist"
+        name="artist"
+        placeholder="e.g. Queen"
       />
       <FormField
-        name='album'
-        label='Album'
+        dataTestId="input-album"
         form={form}
-        placeholder='e.g. A Night at the Opera'
-        dataTestId='input-album'
+        label="Album"
+        name="album"
+        placeholder="e.g. A Night at the Opera"
       />
       <FormField
-        name='coverImage'
-        label='Cover URL'
+        dataTestId="input-cover-image"
         form={form}
-        placeholder='https://example.com/image.jpg'
-        dataTestId='input-cover-image'
+        label="Cover URL"
+        name="coverImage"
+        placeholder="https://example.com/image.jpg"
       />
 
-      <div className='grid grid-cols-4 items-start gap-4'>
-        <Label htmlFor='genres-button' className='text-right pt-2'>
+      <div className="grid grid-cols-4 items-start gap-4">
+        <Label className="text-right pt-2" htmlFor="genres-button">
           Genres
         </Label>
-        <GenreSelector form={form} availableGenres={availableGenres} />
+        <GenreSelector availableGenres={availableGenres} form={form} />
       </div>
 
-      <div className='flex justify-end gap-2 pt-4'>
+      <div className="flex justify-end gap-2 pt-4">
         {onCancel && (
-          <Button type='button' variant='outline' onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
         )}
         <Button
-          type='submit'
+          data-testid="submit-button"
           disabled={
             isLoading ||
-            (dialogType === 'edit' && !form.formState.isDirty) ||
-            (dialogType === 'create' && !form.formState.isValid)
+            (dialogType === "edit" && !form.formState.isDirty) ||
+            (dialogType === "create" && !form.formState.isValid)
           }
-          data-testid='submit-button'
+          type="submit"
         >
           {isLoading
-            ? dialogType === 'create'
-              ? 'Creating...'
-              : 'Saving...'
+            ? dialogType === "create"
+              ? "Creating..."
+              : "Saving..."
             : submitButtonText}
         </Button>
       </div>

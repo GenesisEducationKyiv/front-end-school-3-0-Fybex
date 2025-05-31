@@ -1,0 +1,7 @@
+{
+  "cSpell.words": ["sona", "Zodios"],
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  }
+}

@@ -1,17 +1,14 @@
-import { ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from "@tanstack/react-table";
 
-import { Skeleton } from '@/components/ui/skeleton';
-import { TableCell, TableRow } from '@/components/ui/table';
+import { Skeleton } from "@/components/ui/skeleton";
+import { TableCell, TableRow } from "@/components/ui/table";
 
-interface ColumnMeta {
-  className?: string;
-  skeletonHeight?: string;
-}
+import { type ColumnMeta } from "./columns";
 
 interface TracksTableBodySkeletonProps<TData> {
   rowCount?: number;
   columnCount?: number;
-  columns: ColumnDef<TData, unknown>[];
+  columns: ColumnDef<TData>[];
 }
 
 export function TracksTableBodySkeleton<TData>({
@@ -21,18 +18,21 @@ export function TracksTableBodySkeleton<TData>({
   return (
     <>
       {Array.from({ length: rowCount }).map((_, rowIndex) => (
-        <TableRow key={`skeleton-row-${rowIndex}`} data-testid='loading-tracks'>
+        <TableRow
+          data-testid="loading-tracks"
+          key={`skeleton-row-${rowIndex.toString()}`}
+        >
           {columns.map((column, colIndex) => {
-            const meta = column?.meta as ColumnMeta | undefined;
+            const meta = column.meta as ColumnMeta | undefined;
 
-            const cellClassName = meta?.className || '';
-            const skeletonHeightClass = meta?.skeletonHeight || 'h-4';
+            const cellClassName = meta?.className ?? "";
+            const skeletonHeightClass = meta?.skeletonHeight ?? "h-4";
 
             return (
               <TableCell
-                key={`skeleton-cell-${rowIndex}-${colIndex}`}
                 className={cellClassName}
-                data-loading='true'
+                data-loading="true"
+                key={`skeleton-cell-${rowIndex.toString()}-${colIndex.toString()}`}
               >
                 <Skeleton className={`${skeletonHeightClass} w-full`} />
               </TableCell>

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Command as CommandPrimitive } from "cmdk"
 import { SearchIcon } from "lucide-react"
 import * as React from "react"

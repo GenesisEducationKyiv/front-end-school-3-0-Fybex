@@ -1,16 +1,15 @@
-import './App.css';
+import "./App.css";
 
-import { useQueryErrorResetBoundary } from '@tanstack/react-query';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Trash2 } from 'lucide-react';
-import { useState } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
-import { toast } from 'sonner';
+import { useQueryErrorResetBoundary } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
+import { useState } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { toast } from "sonner";
 
-import AudioPlayer from '@/components/player';
-import { useAudioPlayerStore } from '@/components/player/use-audio-player-store';
-import CreateTrackDialog from '@/components/tracks/dialogs/create-track-dialog';
-import TracksTable from '@/components/tracks/table';
+import AudioPlayer from "@/components/player";
+import { useAudioPlayerStore } from "@/components/player/use-audio-player-store";
+import CreateTrackDialog from "@/components/tracks/dialogs/create-track-dialog";
+import TracksTable from "@/components/tracks/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,106 +20,138 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import AnimatedTitle from '@/components/ui/animated-title';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/alert-dialog";
+import AnimatedTitle from "@/components/ui/animated-title";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Toaster } from '@/components/ui/sonner';
-import { useApiQuery } from '@/hooks/use-api-query';
-import { useDebounce } from '@/hooks/use-debounce';
-import { deleteTrack, fetchGenres, FetchTracksOptions } from '@/lib/api';
-import { queryKeys } from '@/lib/query-keys';
-import { GenresResponse, Track } from '@/lib/schemas';
+} from "@/components/ui/select";
+import { Toaster } from "@/components/ui/sonner";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useGetGenres } from "@/lib/api/genres";
+import { useDeleteTracks } from "@/lib/api/tracks";
+import {
+  type SortField,
+  type SortOrder,
+  type TrackWithId,
+} from "@/lib/api/types";
 
-const sortOptions: { value: FetchTracksOptions['sort']; label: string }[] = [
-  { value: 'createdAt', label: 'Newest' },
-  { value: 'title', label: 'Title' },
-  { value: 'artist', label: 'Artist' },
-  { value: 'album', label: 'Album' },
-];
+const SORT_FIELD_LABELS: Record<SortField, string> = {
+  createdAt: "Newest",
+  title: "Title",
+  artist: "Artist",
+  album: "Album",
+} as const;
+
+const SORT_ORDER_LABELS: Record<SortOrder, string> = {
+  asc: "Ascending",
+  desc: "Descending",
+} as const;
+
+const SORT_OPTIONS = Object.entries(SORT_FIELD_LABELS).map(
+  ([value, label]) => ({
+    value: value,
+    label,
+  })
+);
+
+const SORT_ORDER_OPTIONS = Object.entries(SORT_ORDER_LABELS).map(
+  ([value, label]) => ({
+    value: value,
+    label,
+  })
+);
+
+const isSortField = (value: string): value is SortField => {
+  return Object.keys(SORT_FIELD_LABELS).includes(value);
+};
+
+const isSortOrder = (value: string): value is SortOrder => {
+  return Object.keys(SORT_ORDER_LABELS).includes(value);
+};
 
 function App() {
-  const [genre, setGenre] = useState('');
-  const [localSearchTerm, setLocalSearchTerm] = useState('');
+  const [genre, setGenre] = useState("");
+  const [localSearchTerm, setLocalSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(localSearchTerm, 300);
-  const [sortBy, setSortBy] = useState<FetchTracksOptions['sort']>('createdAt');
-  const [sortOrder, setSortOrder] =
-    useState<FetchTracksOptions['order']>('desc');
+  const [sortBy, setSortBy] = useState<SortField>("createdAt");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [selectedTrackIds, setSelectedTrackIds] = useState<string[]>([]);
 
-  const { data: availableGenres = [] } = useApiQuery<GenresResponse, Error>({
-    queryKey: queryKeys.genres.list(),
-    queryFn: fetchGenres,
-    staleTime: 60 * 1000 * 5, // 5 minutes
-  });
+  const { data: availableGenres = [] } = useGetGenres();
 
-  const queryClient = useQueryClient();
+  const deleteMutation = useDeleteTracks();
 
-  const deleteMutation = useMutation<
-    PromiseSettledResult<void>[],
-    Error,
-    string[]
-  >({
-    mutationFn: async (ids) => {
-      return Promise.allSettled(ids.map((id) => deleteTrack(id)));
-    },
-    onSuccess: (results) => {
-      const successfulDeletes = results.filter((r) => r.status === 'fulfilled');
-      const failedDeletes = results.filter((r) => r.status === 'rejected');
+  const handleSelectionChange = (selectedIds: string[]) => {
+    setSelectedTrackIds(selectedIds);
+  };
 
-      if (successfulDeletes.length > 0) {
-        toast.success(
-          `${successfulDeletes.length} track${
-            successfulDeletes.length > 1 ? 's' : ''
-          } deleted successfully!`,
-        );
-      }
-      if (failedDeletes.length > 0) {
-        toast.error(
-          `Failed to delete ${failedDeletes.length} track${
-            failedDeletes.length > 1 ? 's' : ''
-          }.`,
-          {
-            description: 'Please check the console or server logs for details.',
-          },
-        );
-        failedDeletes.forEach((failure) => {
-          if (failure.status === 'rejected') {
-            console.error('Delete failed:', failure.reason);
-          }
-        });
-      }
-      queryClient.invalidateQueries({ queryKey: queryKeys.tracks.all });
-      setSelectedTrackIds([]);
-    },
-    onError: (error) => {
-      toast.error(`Failed to delete tracks: ${error.message}`);
-    },
-  });
+  const handleSortChange = (value: string) => {
+    if (isSortField(value)) {
+      setSortBy(value);
+    }
+  };
 
-  const handleSelectionChange = (selectedIds: (string | number)[]) => {
-    setSelectedTrackIds(selectedIds as string[]);
+  const handleSortOrderChange = (value: string) => {
+    if (isSortOrder(value)) {
+      setSortOrder(value);
+    }
   };
 
   const handleDeleteSelected = () => {
     if (selectedTrackIds.length > 0) {
-      deleteMutation.mutate(selectedTrackIds);
+      deleteMutation.mutate(selectedTrackIds, {
+        onSuccess: (result) => {
+          if (result.success && result.failed) {
+            const successCount = result.success.length;
+            const failedCount = result.failed.length;
+
+            if (successCount > 0) {
+              toast.success(
+                `${successCount.toString()} track${
+                  successCount > 1 ? "s" : ""
+                } deleted successfully!`
+              );
+            }
+            if (failedCount > 0) {
+              toast.error(
+                `Failed to delete ${failedCount.toString()} track${
+                  failedCount > 1 ? "s" : ""
+                }.`,
+                {
+                  description:
+                    "Please check the console or server logs for details.",
+                }
+              );
+            }
+          } else {
+            toast.success(
+              `${selectedTrackIds.length.toString()} track${
+                selectedTrackIds.length > 1 ? "s" : ""
+              } deleted successfully!`
+            );
+          }
+          setSelectedTrackIds([]);
+        },
+        onError: (error: Error) => {
+          toast.error(`Failed to delete tracks: ${error.message}`);
+        },
+      });
     }
   };
 
   const currentStoreTrack = useAudioPlayerStore((state) => state.track);
+  const isPlaying = useAudioPlayerStore((state) => state.isPlaying);
   const setTrack = useAudioPlayerStore((state) => state.setTrack);
   const togglePlayPause = useAudioPlayerStore((state) => state.togglePlayPause);
   const { reset } = useQueryErrorResetBoundary();
 
-  const handleTrackClick = (clickedTrack: Track) => {
+  const handleTrackClick = (clickedTrack: TrackWithId) => {
     if (clickedTrack.id === currentStoreTrack?.id) {
       togglePlayPause();
     } else {
@@ -129,32 +160,36 @@ function App() {
   };
 
   return (
-    <div className='min-h-screen p-8'>
+    <div className="min-h-screen p-8">
       <AnimatedTitle
-        baseTitle='sona.'
-        animatedSuffix={' music tracks manager'}
-        data-testid='tracks-header'
+        animatedSuffix={" music tracks manager"}
+        baseTitle="sona."
+        data-testid="tracks-header"
       />
 
-      <div className='flex justify-between items-center mb-4'>
-        <div className='flex flex-col sm:flex-row gap-2'>
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Input
-            placeholder='Search by title, artist, album...'
+            className="max-w-sm"
+            data-testid="search-input"
+            placeholder="Search by title, artist, album..."
             value={localSearchTerm}
-            onChange={(e) => setLocalSearchTerm(e.target.value)}
-            className='max-w-sm'
-            data-testid='search-input'
+            onChange={(e) => {
+              setLocalSearchTerm(e.target.value);
+            }}
           />
           <Select
-            value={genre || 'all'}
-            onValueChange={(value) => setGenre(value === 'all' ? '' : value)}
-            data-testid='filter-genre'
+            data-testid="filter-genre"
+            value={genre || "all"}
+            onValueChange={(value) => {
+              setGenre(value === "all" ? "" : value);
+            }}
           >
-            <SelectTrigger className='w-[220px]'>
-              <SelectValue placeholder='Filter by genre' />
+            <SelectTrigger className="w-[220px]">
+              <SelectValue placeholder="Filter by genre" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value='all'>All Genres</SelectItem>
+              <SelectItem value="all">All Genres</SelectItem>
               {availableGenres.map((g) => (
                 <SelectItem key={g} value={g}>
                   {g}
@@ -163,49 +198,48 @@ function App() {
             </SelectContent>
           </Select>
           <Select
+            data-testid="sort-select"
             value={sortBy}
-            onValueChange={(value) =>
-              setSortBy(value as FetchTracksOptions['sort'])
-            }
-            data-testid='sort-select'
+            onValueChange={handleSortChange}
           >
-            <SelectTrigger className='w-[180px]'>
-              <SelectValue placeholder='Sort by...' />
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Sort by..." />
             </SelectTrigger>
             <SelectContent>
-              {sortOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value!}>
+              {SORT_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select
+            data-testid="sort-order-select"
             value={sortOrder}
-            onValueChange={(value) =>
-              setSortOrder(value as FetchTracksOptions['order'])
-            }
-            data-testid='sort-order-select'
+            onValueChange={handleSortOrderChange}
           >
-            <SelectTrigger className='w-[150px]'>
+            <SelectTrigger className="w-[150px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value='asc'>Ascending</SelectItem>
-              <SelectItem value='desc'>Descending</SelectItem>
+              {SORT_ORDER_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
-        <div className='flex items-center gap-2'>
+        <div className="flex items-center gap-2">
           {selectedTrackIds.length > 0 && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button
-                  variant='destructive'
-                  data-testid='bulk-delete-button'
-                  size='sm'
+                  data-testid="bulk-delete-button"
+                  size="sm"
+                  variant="destructive"
                 >
-                  <Trash2 className='w-4 h-4 mr-2' />
+                  <Trash2 className="w-4 h-4 mr-2" />
                   Delete ({selectedTrackIds.length})
                 </Button>
               </AlertDialogTrigger>
@@ -214,25 +248,25 @@ function App() {
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
                     This action cannot be undone. This will permanently delete
-                    the selected{' '}
-                    <span className='font-semibold'>
+                    the selected{" "}
+                    <span className="font-semibold">
                       {selectedTrackIds.length} track
-                      {selectedTrackIds.length > 1 ? 's' : ''}
+                      {selectedTrackIds.length > 1 ? "s" : ""}
                     </span>
                     .
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel data-testid='cancel-bulk-delete'>
+                  <AlertDialogCancel data-testid="cancel-bulk-delete">
                     Cancel
                   </AlertDialogCancel>
                   <AlertDialogAction
-                    onClick={handleDeleteSelected}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    data-testid="confirm-bulk-delete"
                     disabled={deleteMutation.isPending}
-                    className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
-                    data-testid='confirm-bulk-delete'
+                    onClick={handleDeleteSelected}
                   >
-                    {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+                    {deleteMutation.isPending ? "Deleting..." : "Delete"}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -240,7 +274,7 @@ function App() {
           )}
 
           <CreateTrackDialog>
-            <Button data-testid='create-track-button' size='sm'>
+            <Button data-testid="create-track-button" size="sm">
               Create Track
             </Button>
           </CreateTrackDialog>
@@ -248,35 +282,39 @@ function App() {
       </div>
 
       <ErrorBoundary
-        onReset={reset}
         fallbackRender={({ error, resetErrorBoundary }) => (
-          <div className='text-destructive p-4 border border-destructive bg-destructive/10 rounded-md text-center'>
-            <p>Error loading tracks: {error.message}</p>
+          <div className="text-destructive p-4 border border-destructive bg-destructive/10 rounded-md text-center">
+            <p>
+              Error loading tracks:{" "}
+              {error instanceof Error ? error.message : "Unknown error"}
+            </p>
             <Button
-              variant='destructive'
-              size='sm'
+              className="mt-2"
+              size="sm"
+              variant="destructive"
               onClick={resetErrorBoundary}
-              className='mt-2'
             >
               Try again
             </Button>
           </div>
         )}
+        onReset={reset}
       >
         <TracksTable
-          onPlayTrack={handleTrackClick}
           currentTrack={currentStoreTrack}
-          onSelectionChange={handleSelectionChange}
-          searchTerm={debouncedSearchTerm}
           genre={genre}
+          isPlaying={isPlaying}
+          searchTerm={debouncedSearchTerm}
           sortBy={sortBy}
           sortOrder={sortOrder}
+          onPlayTrack={handleTrackClick}
+          onSelectionChange={handleSelectionChange}
         />
       </ErrorBoundary>
 
       <AudioPlayer />
 
-      <Toaster data-testid='toast-container' />
+      <Toaster data-testid="toast-container" />
     </div>
   );
 }
