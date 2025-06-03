@@ -121,5 +121,8 @@ We will adopt [openapi-zod-client](https://www.npmjs.com/package/openapi-zod-cli
 **Bad things / Risks:**
 
 - Vendor lock-in: reliance on [openapi-zod-client](https://www.npmjs.com/package/openapi-zod-client) and the Zodios ecosystem.
-- CI job dependency on backend repository availability.
-- Additional CI job which takes some time due to schema and client generation.
+  - Mitigation: wrap the generator behind our own script API so we can swap tools later.  
+- CI dependency on backend spec availability or validity  
+  - Mitigation: fail early with a clear "cannot fetch/parse spec" error; optionally send alerts (Slack/GitHub).  
+- Additional CI job which takes some time due to schema and client generation
+  - Mitigation: cache dependencies, parallelize setup steps.
