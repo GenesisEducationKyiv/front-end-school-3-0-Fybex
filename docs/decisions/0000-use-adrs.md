@@ -1,5 +1,11 @@
 # ADR 0000: Use Architecture Decision Records
 
+## Status
+
+Accepted
+
+## Context
+
 Right now, we make architecture choices on the fly. As `sona` grows, we might forget why we made certain choices, talk about the same things twice, and it will be harder for new people to join. We need a simple, clear way to write down important design choices.
 
 ## Decision
@@ -18,10 +24,6 @@ We didn't choose:
 - **Random notes:** Too messy, easy to lose.
 - **Separate wiki:** Another system to manage, not that close to code.
 - **Code comments:** Too focused on small details, spread across the codebase.
-
-## Status
-
-Accepted
 
 ## Consequences
 
