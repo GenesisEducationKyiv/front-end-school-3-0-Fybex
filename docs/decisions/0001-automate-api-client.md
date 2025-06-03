@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -12,8 +12,7 @@ Right now we hand-write our API calls [`lib/api.ts`](https://github.com/GenesisE
 
 1. **Our Zod usage**  
    - We already define Zod schemas by hand for each endpoint  
-   - Use them for runtime validation of API requests/responses  
-   - Infer TypeScript types via `z.infer<>`  
+   - Use them for types/runtime validation of API requests/responses  
    - Drive form parsing/validation  
    - Ensure frontend/backend type consistency
 
@@ -27,79 +26,16 @@ Right now we hand-write our API calls [`lib/api.ts`](https://github.com/GenesisE
 
 ## Decision
 
-We will adopt [openapi-zod-client](https://www.npmjs.com/package/openapi-zod-client) to generate both a typed HTTP client (via Zodios) and Zod schemas directly from our OpenAPI spec. To ensure the spec and generated code remain current, we will use two coordinated workflows:
+We will adopt an OpenAPI-driven code generation approach:
 
-### 1. Backend CI: keep `openapi/swagger.yaml` current
+- Use [openapi-zod-client](https://www.npmjs.com/package/openapi-zod-client) to produce both:
+  - A fully typed HTTP client (built on Zodios).
+  - Corresponding Zod schemas for all endpoints.
+- Integrate this generation into our CI pipelines so that:
+  - Any divergence between the spec and generated code fails the CI pipeline & notifies the team.
+  - Developers can regenerate locally against a running backend for fast feedback.
 
-– **Trigger**: any push (PR branches or merges) to the backend repo.  
-– **Process**:  
-
-  1. Checkout code & install dependencies.  
-  2. Start the backend server in CI (e.g. `npm ci && npm run start:ci`) on `localhost:8000`.  
-  3. Fetch the live spec:  
-
-     ```bash
-     curl -fsSL http://localhost:8000/documentation/yaml \
-       -o tmp/swagger.yaml
-     ```
-
-  4. Compare `tmp/swagger.yaml` to the version in the branch at  
-     `openapi/swagger.yaml`.  
-     - If they differ, overwrite `openapi/swagger.yaml`, commit, and push back  
-       to the same branch.  
-  5. If the branch is `main`, send a `repository_dispatch` event  
-     (`event_type: swagger-updated`) to the frontend repo.
-
-> There is always an `openapi/swagger.yaml` in each backend branch, and the CI job ensures it matches that branch’s running server spec.
-
-### 2. Frontend CI: generate & verify client
-
-– **Triggers**:  
-
-  1. Any push or pull-request on the frontend repo (all branches).  
-  2. Any `repository_dispatch` event `swagger-updated` from backend `main`.  
-– **Setup**: in `package.json` add:
-
-   ```json
-   {
-     "scripts": {
-       "generate:api":
-         "openapi-zod-client \
-           -i \"${OPENAPI_URL:-http://localhost:8000/documentation/yaml}\" \
-           -o src/generated/api.ts \
-           --export-schemas"
-     }
-   }
-   ```
-
-- **Local dev**: omit `OPENAPI_URL`, so the script reads from your  
-    local `localhost:8000`.  
-- **CI**: set  
-    `OPENAPI_URL=https://raw.githubusercontent.com/<org>/backend/main/openapi/swagger.yaml` to pull the checked-in spec.
-
-– **Process**:  
-
-  1. Checkout & install dependencies.  
-  2. Run `npm run generate:api`.  
-  3. Compare generated `src/generated/api.ts` to the committed file:  
-
-     ```bash
-     git diff --quiet src/generated/api.ts
-     ```  
-
-  4. If there’s any difference, fail CI and notify(Slack/GitHub):
-     > ERROR: `src/generated/api.ts` is out of date.  
-     > Run `npm run generate:api`, commit the changes, and push.  
-
-### Example flow
-
-1. A backend engineer merges a new `/users` endpoint into `main`.  
-2. Backend CI spins up the server, fetches `/documentation/yaml`,  
-   updates `openapi/swagger.yaml`, and pushes that commit.  
-3. That push to `main` fires a `swagger-updated` dispatch to frontend.  
-4. Frontend CI (via dispatch) sets `OPENAPI_URL=…/backend/main/openapi/swagger.yaml`, runs `npm run generate:api`, regenerates `src/generated/api.ts` (with `/users`), sees a diff, fails and notifies(Slack/GitHub) the frontend team.  
-5. The frontend engineer pulls, runs `npm run generate:api` locally, checks if there any other changes related to API changes need to be done, commits the new `src/generated/api.ts` and pushes.  
-6. Next CI run finds no diff and succeeds.
+This ensures that the OpenAPI document is the single source of truth for request/response shapes and that all code deriving from it stays up to date.
 
 ## Rationale
 
@@ -108,6 +44,7 @@ We will adopt [openapi-zod-client](https://www.npmjs.com/package/openapi-zod-cli
 - **Single source of truth:** The OpenAPI file drives both types and runtime validation.
 - **Local-first workflow:** developers can run `npm run generate:api` against their local backend server without CI.  
 - **Fast feedback & notifications:** Slack/Github alerts inform the team as soon as specs change.
+- **Tool choice:** [openapi-zod-client](https://www.npmjs.com/package/openapi-zod-client) is the only solution we found that generates Zod schemas directly from an OpenAPI spec, minimizing changes to our existing Zod-based setup. Alternatives like [swagger-typescript-api](https://www.npmjs.com/package/swagger-typescript-api), [openapi-typescript](https://www.npmjs.com/package/openapi-typescript), and [openapi-client-axios](https://www.npmjs.com/package/openapi-client-axios) produce only TypeScript types/clients without runtime validation, and [zod-openapi](https://www.npmjs.com/package/zod-openapi) works in the opposite direction (Zod→OpenAPI).
 
 ## Consequences
 
