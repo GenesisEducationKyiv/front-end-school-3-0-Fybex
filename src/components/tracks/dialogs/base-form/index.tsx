@@ -5,12 +5,13 @@ import { GenreSelector } from "@/components/tracks/dialogs/base-form/genres-sele
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { type CreateTrackFormData } from "@/lib/api/tracks";
+import { type Genres } from "@/lib/api/types";
 
 interface BaseFormProps {
   form: UseFormReturn<CreateTrackFormData>;
   isLoading: boolean;
   submitButtonText: string;
-  availableGenres: string[];
+  availableGenres: Genres;
   dialogType: "create" | "edit";
   onSubmit: (data: CreateTrackFormData) => void;
   onCancel?: () => void;

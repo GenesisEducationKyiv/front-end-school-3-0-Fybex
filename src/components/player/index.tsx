@@ -157,9 +157,7 @@ export default function AudioPlayer() {
 
     const tag = target.tagName.toLowerCase();
     if (
-      tag === "input" ||
-      tag === "textarea" ||
-      tag === "select" ||
+      ["input", "textarea", "select"].includes(tag) ||
       target.isContentEditable
     )
       return;

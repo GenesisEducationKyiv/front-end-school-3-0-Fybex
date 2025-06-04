@@ -4,6 +4,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { useGetTracks } from "@/lib/api/tracks";
 import {
   type FetchTracksOptions,
+  type Genre,
   type Track,
   type TrackWithId,
 } from "@/lib/api/types";
@@ -15,7 +16,7 @@ interface TracksTableProps {
   currentTrack: TrackWithId | null;
   isPlaying: boolean;
   searchTerm: string;
-  genre: string;
+  genre: Genre;
   sortBy: FetchTracksOptions["sort"];
   sortOrder: FetchTracksOptions["order"];
   onPlayTrack: (track: TrackWithId) => void;
@@ -57,7 +58,7 @@ function TracksTable({
     genre: genre,
     sort: sortBy,
     order: sortOrder,
-    artist: undefined, // "search" is used instead
+    artist: undefined, // * "search" is used instead
   };
 
   const { data: paginatedData = INITIAL_DATA, isLoading } =

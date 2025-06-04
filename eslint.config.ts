@@ -7,12 +7,12 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
+  { ignores: ["dist", "src/components/ui/**/*"] },
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
   eslintPluginImport.flatConfigs.recommended,
   {
-    ignores: ["dist", "src/components/ui/**/*"],
     languageOptions: {
       ecmaVersion: 2022,
       globals: globals.browser,

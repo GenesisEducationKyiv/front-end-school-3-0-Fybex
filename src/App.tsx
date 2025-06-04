@@ -2,7 +2,7 @@ import "./App.css";
 
 import { useQueryErrorResetBoundary } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useReducer, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 
@@ -36,8 +36,10 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { useGetGenres } from "@/lib/api/genres";
 import { useDeleteTracks } from "@/lib/api/tracks";
 import {
+  type Genre,
   type SortField,
   type SortOrder,
+  type TrackId,
   type TrackWithId,
 } from "@/lib/api/types";
 
@@ -75,19 +77,30 @@ const isSortOrder = (value: string): value is SortOrder => {
   return Object.keys(SORT_ORDER_LABELS).includes(value);
 };
 
+const ALL_GENRES = "All Genres";
+
+const genreDisplayToValue = (displayValue: string): Genre =>
+  displayValue === ALL_GENRES ? "" : displayValue;
+
 function App() {
-  const [genre, setGenre] = useState("");
   const [localSearchTerm, setLocalSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(localSearchTerm, 300);
+
+  const { data: rawAvailableGenres = [] } = useGetGenres();
+  const availableGenres = [ALL_GENRES, ...rawAvailableGenres];
+  const [genre, dispatchGenre] = useReducer(
+    (_: Genre, displayValue: string) => genreDisplayToValue(displayValue),
+    ALL_GENRES,
+    genreDisplayToValue
+  );
+
   const [sortBy, setSortBy] = useState<SortField>("createdAt");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
-  const [selectedTrackIds, setSelectedTrackIds] = useState<string[]>([]);
 
-  const { data: availableGenres = [] } = useGetGenres();
-
+  const [selectedTrackIds, setSelectedTrackIds] = useState<TrackId[]>([]);
   const deleteMutation = useDeleteTracks();
 
-  const handleSelectionChange = (selectedIds: string[]) => {
+  const handleSelectionChange = (selectedIds: TrackId[]) => {
     setSelectedTrackIds(selectedIds);
   };
 
@@ -104,45 +117,47 @@ function App() {
   };
 
   const handleDeleteSelected = () => {
-    if (selectedTrackIds.length > 0) {
-      deleteMutation.mutate(selectedTrackIds, {
-        onSuccess: (result) => {
-          if (result.success && result.failed) {
-            const successCount = result.success.length;
-            const failedCount = result.failed.length;
+    if (selectedTrackIds.length === 0) {
+      return;
+    }
 
-            if (successCount > 0) {
-              toast.success(
-                `${successCount.toString()} track${
-                  successCount > 1 ? "s" : ""
-                } deleted successfully!`
-              );
-            }
-            if (failedCount > 0) {
-              toast.error(
-                `Failed to delete ${failedCount.toString()} track${
-                  failedCount > 1 ? "s" : ""
-                }.`,
-                {
-                  description:
-                    "Please check the console or server logs for details.",
-                }
-              );
-            }
-          } else {
+    deleteMutation.mutate(selectedTrackIds, {
+      onSuccess: (result) => {
+        if (result.success && result.failed) {
+          const successCount = result.success.length;
+          const failedCount = result.failed.length;
+
+          if (successCount > 0) {
             toast.success(
-              `${selectedTrackIds.length.toString()} track${
-                selectedTrackIds.length > 1 ? "s" : ""
+              `${successCount.toString()} track${
+                successCount > 1 ? "s" : ""
               } deleted successfully!`
             );
           }
-          setSelectedTrackIds([]);
-        },
-        onError: (error: Error) => {
-          toast.error(`Failed to delete tracks: ${error.message}`);
-        },
-      });
-    }
+          if (failedCount > 0) {
+            toast.error(
+              `Failed to delete ${failedCount.toString()} track${
+                failedCount > 1 ? "s" : ""
+              }.`,
+              {
+                description:
+                  "Please check the console or server logs for details.",
+              }
+            );
+          }
+        } else {
+          toast.success(
+            `${selectedTrackIds.length.toString()} track${
+              selectedTrackIds.length > 1 ? "s" : ""
+            } deleted successfully!`
+          );
+        }
+        setSelectedTrackIds([]);
+      },
+      onError: (error: Error) => {
+        toast.error(`Failed to delete tracks: ${error.message}`);
+      },
+    });
   };
 
   const currentStoreTrack = useAudioPlayerStore((state) => state.track);
@@ -180,16 +195,13 @@ function App() {
           />
           <Select
             data-testid="filter-genre"
-            value={genre || "all"}
-            onValueChange={(value) => {
-              setGenre(value === "all" ? "" : value);
-            }}
+            value={genre}
+            onValueChange={dispatchGenre}
           >
             <SelectTrigger className="w-[220px]">
               <SelectValue placeholder="Filter by genre" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Genres</SelectItem>
               {availableGenres.map((g) => (
                 <SelectItem key={g} value={g}>
                   {g}

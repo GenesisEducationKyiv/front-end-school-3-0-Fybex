@@ -9,13 +9,11 @@ import { type TrackWithId } from "@/lib/api/types";
 
 import { TrackActions } from "./actions";
 
-// Column-specific meta type
 export interface ColumnMeta {
   className?: string;
   skeletonHeight?: string;
 }
 
-// Table-level meta type
 export interface TrackTableMeta {
   currentTrack: TrackWithId | null;
   isPlaying: boolean;
@@ -171,8 +169,3 @@ export const columns: ColumnDef<TrackWithId>[] = [
     },
   },
 ];
-
-// Helper to convert TypedColumnDef to ColumnDef for TanStack Table
-export const getColumnDefs = (): ColumnDef<TrackWithId>[] => {
-  return columns;
-};

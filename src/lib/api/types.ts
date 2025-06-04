@@ -7,6 +7,10 @@ type Api = ApiOf<typeof api>;
 
 export type Track = ZodiosResponseByAlias<Api, "getApitracksSlug">;
 export type TrackWithId = Track & { id: string };
+export type TrackId = TrackWithId["id"];
+
+export type Genres = ZodiosResponseByAlias<Api, "getApigenres">;
+export type Genre = Genres[number];
 
 export type CreateTrackRequestData = z.infer<typeof schemas.postApitracks_Body>;
 export type UpdateTrackRequestData = z.infer<

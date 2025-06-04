@@ -5,7 +5,7 @@ import { schemas } from "@/generated/api";
 import { useApiQuery } from "@/hooks/use-api-query";
 
 import { API_BASE_URL, apiClient } from "./client";
-import { type FetchTracksOptions } from "./types";
+import { type FetchTracksOptions, type Track, type TrackId } from "./types";
 
 export const baseTrackSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -51,7 +51,7 @@ export const tracksApi = {
     });
   },
 
-  async getTrackBySlug(slug: string) {
+  async getTrackBySlug(slug: NonNullable<Track["slug"]>) {
     return apiClient.getApitracksSlug({ params: { slug } });
   },
 
@@ -65,7 +65,7 @@ export const tracksApi = {
     });
   },
 
-  async updateTrack(id: string, trackData: EditTrackFormData) {
+  async updateTrack(id: TrackId, trackData: EditTrackFormData) {
     return apiClient.putApitracksId(
       {
         title: trackData.title,
@@ -78,15 +78,15 @@ export const tracksApi = {
     );
   },
 
-  async deleteTrack(id: string) {
+  async deleteTrack(id: TrackId) {
     return apiClient.deleteApitracksId(undefined, { params: { id } });
   },
 
-  async deleteTracks(ids: string[]) {
+  async deleteTracks(ids: TrackId[]) {
     return apiClient.postApitracksdelete({ ids });
   },
 
-  async uploadTrackFile(trackId: string, file: File) {
+  async uploadTrackFile(trackId: TrackId, file: File) {
     // * implemented manually
     // * client generator didn't handle multipart/form-data correctly
     const formData = new FormData();
@@ -110,7 +110,7 @@ export const tracksApi = {
     }
   },
 
-  async deleteTrackFile(id: string) {
+  async deleteTrackFile(id: TrackId) {
     return apiClient.deleteApitracksIdfile(undefined, { params: { id } });
   },
 };
@@ -138,7 +138,7 @@ export const useUpdateTrack = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: EditTrackFormData }) =>
+    mutationFn: ({ id, data }: { id: TrackId; data: EditTrackFormData }) =>
       tracksApi.updateTrack(id, data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: trackQueryKeys.all() });
@@ -150,7 +150,7 @@ export const useDeleteTrack = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => tracksApi.deleteTrack(id),
+    mutationFn: (id: TrackId) => tracksApi.deleteTrack(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: trackQueryKeys.all() });
     },
@@ -161,7 +161,7 @@ export const useDeleteTracks = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (ids: string[]) => tracksApi.deleteTracks(ids),
+    mutationFn: (ids: TrackId[]) => tracksApi.deleteTracks(ids),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: trackQueryKeys.all() });
     },
@@ -172,7 +172,7 @@ export const useUploadTrackFile = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ trackId, file }: { trackId: string; file: File }) =>
+    mutationFn: ({ trackId, file }: { trackId: TrackId; file: File }) =>
       tracksApi.uploadTrackFile(trackId, file),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: trackQueryKeys.all() });
@@ -184,13 +184,15 @@ export const useDeleteTrackFile = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => tracksApi.deleteTrackFile(id),
+    mutationFn: (id: TrackId) => tracksApi.deleteTrackFile(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: trackQueryKeys.all() });
     },
   });
 };
 
-export const getTrackAudioUrl = (audioFile: string): string => {
+export const getTrackAudioUrl = (
+  audioFile: NonNullable<Track["audioFile"]>
+): string => {
   return `${API_BASE_URL}/api/files/${audioFile}`;
 };
