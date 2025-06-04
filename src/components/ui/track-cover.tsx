@@ -33,17 +33,19 @@ export function TrackCover({
     >
       {!showError && (
         <img
-          key={src}
-          src={src}
           alt={alt}
           className={cn("h-full w-full object-cover")}
-          onError={() => setHasError(true)}
+          key={src}
           loading="lazy"
+          src={src}
+          onError={() => {
+            setHasError(true);
+          }}
         />
       )}
       {showError && (
         <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/50">
-          <ImageIcon size={iconSize} aria-label={alt} />
+          <ImageIcon aria-label={alt} size={iconSize} />
         </div>
       )}
     </div>

@@ -1,11 +1,11 @@
-// @ts-nocheck
 import {
-  ColumnDef,
+  type ColumnDef,
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  RowSelectionState,
+  type RowSelectionState,
+  type TableMeta,
   useReactTable,
 } from "@tanstack/react-table";
 import { useEffect, useState } from "react";
@@ -28,8 +28,11 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-interface DataTableProps<TData, TMeta = unknown> {
-  columns: ColumnDef<TData, unknown>[];
+interface DataTableProps<
+  TData,
+  TMeta extends TableMeta<TData> = TableMeta<TData>
+> {
+  columns: ColumnDef<TData>[];
   data: TData[];
   isLoading: boolean;
   pageCount: number;
@@ -41,13 +44,13 @@ interface DataTableProps<TData, TMeta = unknown> {
   meta?: TMeta;
   LoadingSkeletonComponent?: React.ComponentType<{
     rowCount: number;
-    columns: ColumnDef<TData, unknown>[];
+    columns: ColumnDef<TData>[];
   }>;
 }
 
 export function DataTable<
   TData extends { id: string | number },
-  TMeta = unknown
+  TMeta extends TableMeta<TData> = TableMeta<TData>
 >({
   columns,
   data,
@@ -93,11 +96,11 @@ export function DataTable<
           .filter((key) => newSelection[key])
           .map((index) => data[Number(index)]?.id)
           .filter((id): id is string | number => id !== undefined);
-        const finalSelectedIds = selectedRowIds as (string | number)[];
+        const finalSelectedIds = selectedRowIds;
         onRowSelectionChange(finalSelectedIds);
       }
     },
-    meta,
+    ...(meta && { meta }),
   });
 
   useEffect(() => {
@@ -117,7 +120,7 @@ export function DataTable<
                 const headerClassName = columnMeta?.className;
 
                 return (
-                  <TableHead key={header.id} className={cn(headerClassName)}>
+                  <TableHead className={cn(headerClassName)} key={header.id}>
                     {flexRender(
                       header.column.columnDef.header,
                       header.getContext()
@@ -130,11 +133,11 @@ export function DataTable<
         </TableHeader>
         <TableBody data-loading={isLoading ? "true" : undefined}>
           {isLoading && LoadingSkeletonComponent && (
-            <LoadingSkeletonComponent rowCount={pageSize} columns={columns} />
+            <LoadingSkeletonComponent columns={columns} rowCount={pageSize} />
           )}
           {!isLoading && table.getRowModel().rows.length === 0 && (
             <TableRow>
-              <TableCell colSpan={columns.length} className="text-center h-24">
+              <TableCell className="text-center h-24" colSpan={columns.length}>
                 No results.
               </TableCell>
             </TableRow>
@@ -143,16 +146,18 @@ export function DataTable<
             table.getRowModel().rows.length > 0 &&
             table.getRowModel().rows.map((row) => {
               const rowId = row.original.id;
-              const testId = rowId ? `track-item-${rowId}` : undefined;
+              const testId = rowId
+                ? `track-item-${rowId.toString()}`
+                : undefined;
               return (
                 <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
                   className={cn(
                     "group hover:bg-muted/50 transition-colors",
                     row.getIsSelected() && "bg-muted"
                   )}
+                  data-state={row.getIsSelected() && "selected"}
                   data-testid={testId}
+                  key={row.id}
                 >
                   {row.getVisibleCells().map((cell) => {
                     const columnMeta = cell.column.columnDef.meta as
@@ -161,7 +166,7 @@ export function DataTable<
                     const cellClassName = columnMeta?.className;
 
                     return (
-                      <TableCell key={cell.id} className={cn(cellClassName)}>
+                      <TableCell className={cn(cellClassName)} key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
@@ -181,10 +186,12 @@ export function DataTable<
         <div className="flex items-center space-x-2">
           <span className="text-sm text-muted-foreground">Rows per page</span>
           <Select
-            value={String(pageSize)}
-            onValueChange={(v) => onPaginationChange(0, Number(v))}
-            disabled={isLoading}
             aria-disabled={isLoading}
+            disabled={isLoading}
+            value={String(pageSize)}
+            onValueChange={(v) => {
+              onPaginationChange(0, Number(v));
+            }}
           >
             <SelectTrigger className="w-[80px]">
               <SelectValue placeholder={pageSize} />
@@ -204,44 +211,52 @@ export function DataTable<
             Page {pageIndex + 1} of {pageCount || 1}
           </span>
           <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPaginationChange(0, pageSize)}
-            disabled={pageIndex === 0 || isLoading}
             aria-disabled={pageIndex === 0 || isLoading}
             data-loading={isLoading ? "true" : undefined}
+            disabled={pageIndex === 0 || isLoading}
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              onPaginationChange(0, pageSize);
+            }}
           >
             First
           </Button>
           <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPaginationChange(pageIndex - 1, pageSize)}
-            disabled={pageIndex === 0 || isLoading}
             aria-disabled={pageIndex === 0 || isLoading}
             data-loading={isLoading ? "true" : undefined}
             data-testid="pagination-prev"
+            disabled={pageIndex === 0 || isLoading}
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              onPaginationChange(pageIndex - 1, pageSize);
+            }}
           >
             Previous
           </Button>
           <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPaginationChange(pageIndex + 1, pageSize)}
-            disabled={pageIndex + 1 >= (pageCount || 1) || isLoading}
             aria-disabled={pageIndex + 1 >= (pageCount || 1) || isLoading}
             data-loading={isLoading ? "true" : undefined}
             data-testid="pagination-next"
+            disabled={pageIndex + 1 >= (pageCount || 1) || isLoading}
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              onPaginationChange(pageIndex + 1, pageSize);
+            }}
           >
             Next
           </Button>
           <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPaginationChange((pageCount || 1) - 1, pageSize)}
-            disabled={pageIndex + 1 >= (pageCount || 1) || isLoading}
             aria-disabled={pageIndex + 1 >= (pageCount || 1) || isLoading}
             data-loading={isLoading ? "true" : undefined}
+            disabled={pageIndex + 1 >= (pageCount || 1) || isLoading}
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              onPaginationChange((pageCount || 1) - 1, pageSize);
+            }}
           >
             Last
           </Button>

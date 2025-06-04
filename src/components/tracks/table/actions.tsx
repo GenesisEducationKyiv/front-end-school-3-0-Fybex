@@ -54,11 +54,7 @@ function UploadTrackDialog({
     e.stopPropagation();
     setIsDragging(false);
     if (e.dataTransfer.files[0]) {
-      if (e.dataTransfer.files[0].type.startsWith("audio/")) {
-        setFile(e.dataTransfer.files[0]);
-      } else {
-        toast.error("Please drop an audio file.");
-      }
+      setFile(e.dataTransfer.files[0]);
     }
   };
 

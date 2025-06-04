@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
 
 interface AnimatedTitleProps {
   baseTitle: string;
@@ -11,7 +10,7 @@ interface AnimatedTitleProps {
 function AnimatedTitle({
   baseTitle,
   animatedSuffix,
-  className = 'text-2xl font-bold mb-6 inline-block',
+  className = "text-2xl font-bold mb-6 inline-block",
   delay = 300,
 }: AnimatedTitleProps) {
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
@@ -20,7 +19,9 @@ function AnimatedTitle({
     const timer = setTimeout(() => {
       setIsTitleExpanded(true);
     }, delay);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+    };
   }, [delay]);
 
   return (
@@ -28,7 +29,7 @@ function AnimatedTitle({
       <span>{baseTitle}</span>
       <span
         className={`inline-block overflow-hidden whitespace-nowrap transition-all duration-1000 ease-in-out align-bottom ${
-          isTitleExpanded ? 'max-w-xs opacity-100 ml-1' : 'max-w-0 opacity-0'
+          isTitleExpanded ? "max-w-xs opacity-100 ml-1" : "max-w-0 opacity-0"
         }`}
       >
         {animatedSuffix}
