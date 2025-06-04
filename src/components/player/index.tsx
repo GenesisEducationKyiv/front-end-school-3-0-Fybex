@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { useAudioPlayerStore } from "@/components/player/use-audio-player-store";
 import { Button } from "@/components/ui/button";
@@ -220,6 +221,7 @@ export default function AudioPlayer() {
         onEnded={handleEnded}
         onError={(e) => {
           console.error("Audio error:", e);
+          toast.error("Error playing audio");
         }}
         onLoadedMetadata={handleLoadedMetadata}
         onPause={handlePause}
