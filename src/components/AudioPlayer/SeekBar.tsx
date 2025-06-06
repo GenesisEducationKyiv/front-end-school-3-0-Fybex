@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 
-import { Slider } from "@/components/ui/slider";
+import { Slider } from "@/components/ui/Slider";
 
 const formatTime = (seconds: number): string => {
   if (isNaN(seconds) || seconds < 0) {

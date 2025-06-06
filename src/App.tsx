@@ -1,9 +1,9 @@
 import "./App.css";
 
-import AppErrorBoundary from "@/components/error-boundary";
-import MusicManager from "@/components/music-manager";
-import AnimatedTitle from "@/components/ui/animated-title";
-import { Toaster } from "@/components/ui/sonner";
+import AppErrorBoundary from "@/components/AppErrorBoundary";
+import MusicManager from "@/components/MusicManager";
+import AnimatedTitle from "@/components/ui/AnimatedTitle";
+import { Toaster } from "@/components/ui/Sonner";
 
 function App() {
   return (

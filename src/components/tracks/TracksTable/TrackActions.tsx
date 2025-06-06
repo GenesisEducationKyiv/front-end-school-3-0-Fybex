@@ -2,27 +2,27 @@ import { Edit, Ellipsis, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/Dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+} from "@/components/ui/DropdownMenu";
+import { Input } from "@/components/ui/Input";
 import { useUploadTrackFile, type TrackWithId } from "@/lib/api/tracks";
 import { cn } from "@/lib/utils";
 
-import DeleteTrackDialog from "../dialogs/delete-track-dialog";
-import EditTrackDialog from "../dialogs/edit-track-dialog";
+import DeleteTrackDialog from "../dialogs/DeleteTrackDialog";
+import EditTrackDialog from "../dialogs/EditTrackDialog";
 
 interface TrackActionsProps {
   track: TrackWithId;

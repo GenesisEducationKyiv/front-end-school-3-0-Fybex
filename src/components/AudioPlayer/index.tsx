@@ -2,15 +2,15 @@ import { X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { useAudioPlayerStore } from "@/components/player/use-audio-player-store";
-import { Button } from "@/components/ui/button";
+import { useAudioPlayerStore } from "@/components/AudioPlayer/useAudioPlayerStore";
+import { Button } from "@/components/ui/Button";
 import useEventListener from "@/hooks/use-event-listener";
 import { getTrackAudioUrl } from "@/lib/api/tracks";
 
-import PlayerControls from "./controls";
-import SeekBar from "./seek-bar";
-import TrackInfo from "./track-info";
-import VolumeControl from "./volume-control";
+import PlayerControls from "./PlayerControls";
+import SeekBar from "./SeekBar";
+import TrackInfo from "./TrackInfo";
+import VolumeControl from "./VolumeControl";
 
 export default function AudioPlayer() {
   const playerRef = useRef<HTMLDivElement>(null);

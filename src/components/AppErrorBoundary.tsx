@@ -2,7 +2,7 @@ import { useQueryErrorResetBoundary } from "@tanstack/react-query";
 import { type ReactNode } from "react";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 
 interface ErrorFallbackProps {
   error: Error;

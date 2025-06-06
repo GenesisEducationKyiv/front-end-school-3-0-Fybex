@@ -1,7 +1,7 @@
 import { type ColumnDef } from "@tanstack/react-table";
 
-import { Skeleton } from "@/components/ui/skeleton";
-import { TableCell, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { TableCell, TableRow } from "@/components/ui/Table";
 
 import { type ColumnMeta } from "./columns";
 

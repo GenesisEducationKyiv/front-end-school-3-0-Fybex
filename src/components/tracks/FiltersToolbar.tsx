@@ -1,11 +1,11 @@
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/Input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/Select";
 import { SORT_OPTIONS, SORT_ORDER_OPTIONS } from "@/hooks/use-tracks-filters";
 
 interface FiltersToolbarProps {

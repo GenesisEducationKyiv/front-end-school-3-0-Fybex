@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/DataTable";
 import { type Genre } from "@/lib/api/genres";
 import {
   useGetTracks,
@@ -10,7 +10,7 @@ import {
 } from "@/lib/api/tracks";
 
 import { columns, type TrackTableMeta } from "./columns";
-import { TracksTableBodySkeleton } from "./skeleton";
+import { TracksTableBodySkeleton } from "./TracksTableBodySkeleton";
 
 interface TracksTableProps {
   currentTrack: TrackWithId | null;

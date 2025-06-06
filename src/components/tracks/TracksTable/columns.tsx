@@ -1,13 +1,13 @@
 import { type ColumnDef } from "@tanstack/react-table";
 import { Pause, Play } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { TrackCover } from "@/components/ui/track-cover";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { TrackCover } from "@/components/ui/TrackCover";
 import { type TrackWithId } from "@/lib/api/tracks";
 
-import { TrackActions } from "./actions";
+import { TrackActions } from "./TrackActions";
 
 export interface ColumnMeta {
   className?: string;

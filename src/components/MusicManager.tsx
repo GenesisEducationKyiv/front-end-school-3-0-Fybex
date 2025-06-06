@@ -1,9 +1,9 @@
-import AppErrorBoundary from "@/components/error-boundary";
-import AudioPlayer from "@/components/player";
-import { useAudioPlayerStore } from "@/components/player/use-audio-player-store";
-import ActionsToolbar from "@/components/tracks/actions-toolbar";
-import FiltersToolbar from "@/components/tracks/filters-toolbar";
-import TracksTable from "@/components/tracks/table";
+import AppErrorBoundary from "@/components/AppErrorBoundary";
+import AudioPlayer from "@/components/AudioPlayer";
+import { useAudioPlayerStore } from "@/components/AudioPlayer/useAudioPlayerStore";
+import ActionsToolbar from "@/components/tracks/ActionsToolbar";
+import FiltersToolbar from "@/components/tracks/FiltersToolbar";
+import TracksTable from "@/components/tracks/TracksTable";
 import { useTrackSelection } from "@/hooks/use-track-selection";
 import { useTracksFilters } from "@/hooks/use-tracks-filters";
 import { type TrackWithId } from "@/lib/api/tracks";

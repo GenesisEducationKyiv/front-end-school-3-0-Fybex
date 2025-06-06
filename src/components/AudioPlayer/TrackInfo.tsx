@@ -1,4 +1,4 @@
-import { TrackCover } from "@/components/ui/track-cover";
+import { TrackCover } from "@/components/ui/TrackCover";
 import { type TrackWithId } from "@/lib/api/tracks";
 
 interface TrackInfoProps {

@@ -1,8 +1,8 @@
 import { Volume1, Volume2, VolumeX } from "lucide-react";
 import { useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/Button";
+import { Slider } from "@/components/ui/Slider";
 
 interface VolumeControlProps {
   volume: number;

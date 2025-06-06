@@ -9,7 +9,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/Dialog";
 import { useGetGenres } from "@/lib/api/genres";
 import {
   editTrackSchema,
@@ -18,7 +18,7 @@ import {
   type TrackWithId,
 } from "@/lib/api/tracks";
 
-import { BaseForm } from "./base-form";
+import BaseForm from "./BaseForm";
 
 interface EditTrackDialogProps {
   track: TrackWithId;

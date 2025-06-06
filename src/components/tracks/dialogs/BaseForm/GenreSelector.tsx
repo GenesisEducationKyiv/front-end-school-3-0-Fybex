@@ -2,8 +2,8 @@ import { Check, ChevronsUpDown, X } from "lucide-react";
 import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import {
   Command,
   CommandEmpty,
@@ -11,12 +11,12 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
+} from "@/components/ui/Command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@/components/ui/Popover";
 import { type Genre, type Genres } from "@/lib/api/genres";
 import { type BaseTrackFormData } from "@/lib/api/tracks";
 import { cn } from "@/lib/utils";
@@ -26,7 +26,10 @@ interface GenreSelectorProps {
   form: UseFormReturn<BaseTrackFormData>;
 }
 
-export function GenreSelector({ form, availableGenres }: GenreSelectorProps) {
+export default function GenreSelector({
+  form,
+  availableGenres,
+}: GenreSelectorProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const selectedGenres = form.watch("genres");
 

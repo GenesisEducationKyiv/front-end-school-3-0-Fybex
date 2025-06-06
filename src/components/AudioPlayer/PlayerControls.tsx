@@ -1,7 +1,7 @@
 import { Pause, Play } from "lucide-react";
 
-import { useAudioPlayerStore } from "@/components/player/use-audio-player-store";
-import { Button } from "@/components/ui/button";
+import { useAudioPlayerStore } from "@/components/AudioPlayer/useAudioPlayerStore";
+import { Button } from "@/components/ui/Button";
 
 interface PlayerControlsProps {
   trackId: string;

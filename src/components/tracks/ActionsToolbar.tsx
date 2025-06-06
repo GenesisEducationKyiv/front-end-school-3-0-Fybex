@@ -1,6 +1,6 @@
 import { Trash2 } from "lucide-react";
 
-import CreateTrackDialog from "@/components/tracks/dialogs/create-track-dialog";
+import CreateTrackDialog from "@/components/tracks/dialogs/CreateTrackDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,8 +11,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/AlertDialog";
+import { Button } from "@/components/ui/Button";
 
 interface ActionsToolbarProps {
   selectedCount: number;

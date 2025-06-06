@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/components/ui/Dialog";
 import { useGetGenres } from "@/lib/api/genres";
 import {
   createTrackSchema,
@@ -18,7 +18,7 @@ import {
   type CreateTrackFormData,
 } from "@/lib/api/tracks";
 
-import { BaseForm } from "./base-form";
+import BaseForm from "./BaseForm";
 
 interface CreateTrackDialogProps {
   children: React.ReactNode;

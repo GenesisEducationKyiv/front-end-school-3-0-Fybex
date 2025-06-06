@@ -6,8 +6,8 @@ import {
   type UseFormReturn,
 } from "react-hook-form";
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
 import { cn } from "@/lib/utils";
 
 const getErrorMessage = <TFieldValues extends FieldValues>(
@@ -35,7 +35,7 @@ interface FormFieldProps<TFieldValues extends FieldValues>
   dataTestId?: string;
 }
 
-export function FormField<TFieldValues extends FieldValues>({
+export default function FormField<TFieldValues extends FieldValues>({
   name,
   label,
   form,

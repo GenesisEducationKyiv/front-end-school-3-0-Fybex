@@ -1,9 +1,9 @@
 import { type UseFormReturn } from "react-hook-form";
 
-import { FormField } from "@/components/tracks/dialogs/base-form/field";
-import { GenreSelector } from "@/components/tracks/dialogs/base-form/genres-selector";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import FormField from "@/components/tracks/dialogs/BaseForm/FormField";
+import GenreSelector from "@/components/tracks/dialogs/BaseForm/GenreSelector";
+import { Button } from "@/components/ui/Button";
+import { Label } from "@/components/ui/Label";
 import { type Genres } from "@/lib/api/genres";
 import { type CreateTrackFormData } from "@/lib/api/tracks";
 
@@ -17,7 +17,7 @@ interface BaseFormProps {
   onCancel?: () => void;
 }
 
-export function BaseForm({
+export default function BaseForm({
   form,
   isLoading,
   submitButtonText,
