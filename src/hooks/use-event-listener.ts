@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 /**
  * useEventListener - Attach an event listener to a target (default: window) with automatic cleanup.
@@ -12,7 +12,7 @@ function useEventListener<K extends keyof WindowEventMap>(
   options?: {
     target?: EventTarget | null;
     options?: boolean | AddEventListenerOptions;
-  },
+  }
 ) {
   const savedHandler = useRef(handler);
 
@@ -22,9 +22,9 @@ function useEventListener<K extends keyof WindowEventMap>(
 
   useEffect(() => {
     const target = options?.target ?? window;
-    if (!target?.addEventListener) return;
-    const eventListener = (event: Event) =>
+    const eventListener = (event: Event) => {
       savedHandler.current(event as WindowEventMap[K]);
+    };
     target.addEventListener(event, eventListener, options?.options);
     return () => {
       target.removeEventListener(event, eventListener, options?.options);
