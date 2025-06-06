@@ -12,8 +12,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useDeleteTrack } from "@/lib/api/tracks";
-import { type TrackWithId } from "@/lib/api/types";
+import { type TrackWithId, useDeleteTrack } from "@/lib/api/tracks";
 
 interface DeleteTrackDialogProps {
   track: TrackWithId;

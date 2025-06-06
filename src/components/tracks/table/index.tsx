@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 
 import { DataTable } from "@/components/ui/data-table";
-import { useGetTracks } from "@/lib/api/tracks";
+import { type Genre } from "@/lib/api/genres";
 import {
+  useGetTracks,
   type FetchTracksOptions,
-  type Genre,
   type Track,
   type TrackWithId,
-} from "@/lib/api/types";
+} from "@/lib/api/tracks";
 
 import { columns, type TrackTableMeta } from "./columns";
 import { TracksTableBodySkeleton } from "./skeleton";

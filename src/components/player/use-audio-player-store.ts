@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { type TrackWithId } from "@/lib/api/types";
+import { type TrackWithId } from "@/lib/api/tracks";
 
 type ToggleFn = (() => void) | null;
 

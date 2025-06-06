@@ -56,7 +56,7 @@ export default tseslint.config(
         },
       ],
       "react-refresh/only-export-components": [
-        "off",
+        "warn",
         { allowConstantExport: true },
       ],
       "react/jsx-sort-props": [

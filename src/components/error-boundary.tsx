@@ -37,7 +37,7 @@ interface AppErrorBoundaryProps {
   description?: string;
 }
 
-export function AppErrorBoundary({
+export default function AppErrorBoundary({
   children,
   fallback,
   title,

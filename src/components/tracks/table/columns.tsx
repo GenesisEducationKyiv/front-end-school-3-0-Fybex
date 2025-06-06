@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TrackCover } from "@/components/ui/track-cover";
-import { type TrackWithId } from "@/lib/api/types";
+import { type TrackWithId } from "@/lib/api/tracks";
 
 import { TrackActions } from "./actions";
 

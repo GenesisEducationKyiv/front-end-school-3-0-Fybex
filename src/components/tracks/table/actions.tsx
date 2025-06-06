@@ -18,8 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { useUploadTrackFile } from "@/lib/api/tracks";
-import { type TrackWithId } from "@/lib/api/types";
+import { useUploadTrackFile, type TrackWithId } from "@/lib/api/tracks";
 import { cn } from "@/lib/utils";
 
 import DeleteTrackDialog from "../dialogs/delete-track-dialog";

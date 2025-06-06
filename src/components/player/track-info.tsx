@@ -1,5 +1,5 @@
 import { TrackCover } from "@/components/ui/track-cover";
-import { type TrackWithId } from "@/lib/api/types";
+import { type TrackWithId } from "@/lib/api/tracks";
 
 interface TrackInfoProps {
   track: TrackWithId;

@@ -15,8 +15,8 @@ import {
   editTrackSchema,
   useUpdateTrack,
   type EditTrackFormData,
+  type TrackWithId,
 } from "@/lib/api/tracks";
-import { type TrackWithId } from "@/lib/api/types";
 
 import { BaseForm } from "./base-form";
 

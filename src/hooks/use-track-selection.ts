@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { useDeleteTracks } from "@/lib/api/tracks";
-import { type TrackId } from "@/lib/api/types";
+import { useDeleteTracks, type TrackId } from "@/lib/api/tracks";
 
 export function useTrackSelection() {
   const [selectedTrackIds, setSelectedTrackIds] = useState<TrackId[]>([]);

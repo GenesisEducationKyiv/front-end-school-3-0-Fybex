@@ -17,8 +17,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { type Genre, type Genres } from "@/lib/api/genres";
 import { type BaseTrackFormData } from "@/lib/api/tracks";
-import { type Genre, type Genres } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
 interface GenreSelectorProps {

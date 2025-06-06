@@ -1,8 +1,8 @@
 import { useReducer, useState } from "react";
 
 import { useDebounce } from "@/hooks/use-debounce";
-import { useGetGenres } from "@/lib/api/genres";
-import { type Genre, type SortField, type SortOrder } from "@/lib/api/types";
+import { useGetGenres, type Genre } from "@/lib/api/genres";
+import { type SortField, type SortOrder } from "@/lib/api/tracks";
 
 const SORT_FIELD_LABELS: Record<SortField, string> = {
   createdAt: "Newest",

@@ -38,7 +38,9 @@ export default function FiltersToolbar({
         data-testid="search-input"
         placeholder="Search by title, artist, album..."
         value={searchTerm}
-        onChange={(e) => onSearchChange(e.target.value)}
+        onChange={(e) => {
+          onSearchChange(e.target.value);
+        }}
       />
       <Select
         data-testid="filter-genre"
