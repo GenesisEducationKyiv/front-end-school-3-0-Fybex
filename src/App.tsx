@@ -3,7 +3,7 @@ import "./App.css";
 import AppErrorBoundary from "@/components/AppErrorBoundary";
 import MusicManager from "@/components/MusicManager";
 import AnimatedTitle from "@/components/ui/AnimatedTitle";
-import { Toaster } from "@/components/ui/Sonner";
+import { Toaster } from "@/components/ui/Toaster";
 
 function App() {
   return (
