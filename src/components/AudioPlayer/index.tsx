@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 import { useAudioPlayerStore } from "@/components/AudioPlayer/useAudioPlayerStore";
 import { Button } from "@/components/ui/Button";
-import useEventListener from "@/hooks/use-event-listener";
+import useEventListener from "@/hooks/useEventListener";
 import { getTrackAudioUrl } from "@/lib/api/tracks";
 
 import PlayerControls from "./PlayerControls";

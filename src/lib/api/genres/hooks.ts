@@ -1,4 +1,4 @@
-import { useApiQuery } from "@/hooks/use-api-query";
+import { useApiQuery } from "@/hooks/useApiQuery";
 
 import { genreQueryKeys, genresApi } from "./service";
 

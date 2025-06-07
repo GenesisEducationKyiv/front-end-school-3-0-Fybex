@@ -1,6 +1,6 @@
 import { useReducer, useState } from "react";
 
-import { useDebounce } from "@/hooks/use-debounce";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useGetGenres, type Genre } from "@/lib/api/genres";
 import { type SortField, type SortOrder } from "@/lib/api/tracks";
 

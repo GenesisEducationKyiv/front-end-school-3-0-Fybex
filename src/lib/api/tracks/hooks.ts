@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { useApiQuery } from "@/hooks/use-api-query";
+import { useApiQuery } from "@/hooks/useApiQuery";
 
 import { trackQueryKeys, tracksApi } from "./service";
 import {

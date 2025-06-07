@@ -4,8 +4,8 @@ import { useAudioPlayerStore } from "@/components/AudioPlayer/useAudioPlayerStor
 import ActionsToolbar from "@/components/tracks/ActionsToolbar";
 import FiltersToolbar from "@/components/tracks/FiltersToolbar";
 import TracksTable from "@/components/tracks/TracksTable";
-import { useTrackSelection } from "@/hooks/use-track-selection";
-import { useTracksFilters } from "@/hooks/use-tracks-filters";
+import { useTrackSelection } from "@/hooks/useTrackSelection";
+import { useTracksFilters } from "@/hooks/useTracksFilters";
 import { type TrackWithId } from "@/lib/api/tracks";
 
 export default function MusicManager() {
