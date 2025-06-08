@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { DataTable } from "@/components/ui/DataTable";
 import { type Genre } from "@/lib/api/genres";
@@ -9,7 +9,7 @@ import {
   type TrackWithId,
 } from "@/lib/api/tracks";
 
-import { columns, type TrackTableMeta } from "./columns";
+import { columns } from "./columns";
 import { TracksTableBodySkeleton } from "./TracksTableBodySkeleton";
 
 interface TracksTableProps {
@@ -19,16 +19,18 @@ interface TracksTableProps {
   genre: Genre;
   sortBy: FetchTracksOptions["sort"];
   sortOrder: FetchTracksOptions["order"];
+  page: number;
+  limit: number;
+  pageSizes: number[];
   onPlayTrack: (track: TrackWithId) => void;
   onSelectionChange: (selectedIds: string[]) => void;
+  onPaginationChange: (newPage: number, newLimit: number) => void;
 }
 
 const INITIAL_DATA = {
   data: [],
   meta: { totalItems: 0, totalPages: 0, currentPage: 1, limit: 10 },
 };
-const PAGE_SIZES = [10, 20, 30, 50, 100];
-const DEFAULT_PAGE_SIZE = 20;
 
 const hasValidId = (track: Track): track is TrackWithId => {
   return typeof track.id === "string" && track.id.length > 0;
@@ -45,15 +47,16 @@ function TracksTable({
   genre,
   sortBy,
   sortOrder,
+  page,
+  limit,
+  pageSizes,
   onPlayTrack,
   onSelectionChange,
+  onPaginationChange,
 }: TracksTableProps) {
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-
   const queryOptions: FetchTracksOptions = {
-    page: pageIndex + 1,
-    limit: pageSize,
+    page,
+    limit,
     search: searchTerm,
     genre: genre,
     sort: sortBy,
@@ -72,7 +75,7 @@ function TracksTable({
   const totalPages = paginatedData.meta?.totalPages ?? 0;
 
   return (
-    <DataTable<TrackWithId, TrackTableMeta>
+    <DataTable
       LoadingSkeletonComponent={(props) => (
         <TracksTableBodySkeleton {...props} columns={columns} />
       )}
@@ -85,12 +88,11 @@ function TracksTable({
         onPlayTrack,
       }}
       pageCount={totalPages}
-      pageIndex={pageIndex}
-      pageSize={pageSize}
-      pageSizes={PAGE_SIZES}
+      pageIndex={page - 1}
+      pageSize={limit}
+      pageSizes={pageSizes}
       onPaginationChange={(newPageIndex, newPageSize) => {
-        setPageIndex(newPageIndex);
-        setPageSize(newPageSize);
+        onPaginationChange(newPageIndex + 1, newPageSize);
       }}
       onRowSelectionChange={(rowIds) => {
         onSelectionChange(rowIds.map((id) => id.toString()));
