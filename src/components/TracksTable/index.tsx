@@ -1,79 +1,36 @@
-import { useMemo } from "react";
-
 import { DataTable } from "@/components/ui/DataTable";
-import { type Genre } from "@/lib/api/genres";
-import {
-  useGetTracks,
-  type FetchTracksOptions,
-  type Track,
-  type TrackWithId,
-} from "@/lib/api/tracks";
+import { type TrackWithId } from "@/lib/api/tracks";
 
 import { columns } from "./columns";
 import { TracksTableBodySkeleton } from "./TracksTableBodySkeleton";
 
 interface TracksTableProps {
+  tracks: TrackWithId[];
+  isLoading: boolean;
   currentTrack: TrackWithId | null;
   isPlaying: boolean;
-  searchTerm: string;
-  genre: Genre;
-  sortBy: FetchTracksOptions["sort"];
-  sortOrder: FetchTracksOptions["order"];
   page: number;
   limit: number;
   pageSizes: number[];
+  totalPages: number;
   onPlayTrack: (track: TrackWithId) => void;
   onSelectionChange: (selectedIds: string[]) => void;
   onPaginationChange: (newPage: number, newLimit: number) => void;
 }
 
-const INITIAL_DATA = {
-  data: [],
-  meta: { totalItems: 0, totalPages: 0, currentPage: 1, limit: 10 },
-};
-
-const hasValidId = (track: Track): track is TrackWithId => {
-  return typeof track.id === "string" && track.id.length > 0;
-};
-
-const filterTracks = (tracks: Track[]): TrackWithId[] => {
-  return tracks.filter(hasValidId);
-};
-
 function TracksTable({
+  tracks,
+  isLoading,
   currentTrack,
   isPlaying,
-  searchTerm,
-  genre,
-  sortBy,
-  sortOrder,
   page,
   limit,
   pageSizes,
+  totalPages,
   onPlayTrack,
   onSelectionChange,
   onPaginationChange,
 }: TracksTableProps) {
-  const queryOptions: FetchTracksOptions = {
-    page,
-    limit,
-    search: searchTerm,
-    genre: genre,
-    sort: sortBy,
-    order: sortOrder,
-    artist: undefined, // * "search" is used instead
-  };
-
-  const { data: paginatedData = INITIAL_DATA, isLoading } =
-    useGetTracks(queryOptions);
-
-  const allTracks = paginatedData.data;
-  const tracks = useMemo(() => {
-    return filterTracks(allTracks ?? []);
-  }, [allTracks]);
-
-  const totalPages = paginatedData.meta?.totalPages ?? 0;
-
   return (
     <DataTable
       LoadingSkeletonComponent={(props) => (

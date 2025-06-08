@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 import ActionsToolbar from "@/components/ActionsToolbar";
 import AppErrorBoundary from "@/components/AppErrorBoundary";
 import AudioPlayer from "@/components/AudioPlayer";
@@ -5,11 +7,29 @@ import { useAudioPlayerStore } from "@/components/AudioPlayer/useAudioPlayerStor
 import FiltersToolbar from "@/components/FiltersToolbar";
 import TracksTable from "@/components/TracksTable";
 import { useGetGenres } from "@/lib/api/genres";
-import { type TrackWithId } from "@/lib/api/tracks";
+import {
+  useGetTracks,
+  type FetchTracksOptions,
+  type Track,
+  type TrackWithId,
+} from "@/lib/api/tracks";
 
 import { SORT_OPTIONS, SORT_ORDER_OPTIONS } from "./useFilterState";
 import { useTrackSelection } from "./useTrackSelection";
 import { useTracksFilters } from "./useTracksFilters";
+
+const INITIAL_DATA = {
+  data: [],
+  meta: { totalItems: 0, totalPages: 0, currentPage: 1, limit: 10 },
+};
+
+const hasValidId = (track: Track): track is TrackWithId => {
+  return typeof track.id === "string" && track.id.length > 0;
+};
+
+const filterTracks = (tracks: Track[]): TrackWithId[] => {
+  return tracks.filter(hasValidId);
+};
 
 export default function MusicManager() {
   const { data: genres = [] } = useGetGenres();
@@ -30,6 +50,26 @@ export default function MusicManager() {
     setPage,
     setLimit,
   } = useTracksFilters();
+
+  const queryOptions: FetchTracksOptions = {
+    page,
+    limit,
+    search: debouncedSearch,
+    genre: genre,
+    sort: sort,
+    order: order,
+    artist: undefined, // * "search" is used instead
+  };
+
+  const { data: paginatedData = INITIAL_DATA, isLoading } =
+    useGetTracks(queryOptions);
+
+  const allTracks = paginatedData.data;
+  const tracks = useMemo(() => {
+    return filterTracks(allTracks ?? []);
+  }, [allTracks]);
+
+  const totalPages = paginatedData.meta?.totalPages ?? 0;
 
   const selection = useTrackSelection();
 
@@ -76,14 +116,13 @@ export default function MusicManager() {
       >
         <TracksTable
           currentTrack={currentTrack}
-          genre={genre}
+          isLoading={isLoading}
           isPlaying={isPlaying}
           limit={limit}
           page={page}
           pageSizes={pageSizes}
-          searchTerm={debouncedSearch}
-          sortBy={sort}
-          sortOrder={order}
+          totalPages={totalPages}
+          tracks={tracks}
           onPaginationChange={(newPage: number, newLimit: number) => {
             setPage(newPage);
             setLimit(newLimit);
