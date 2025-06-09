@@ -14,7 +14,11 @@ import {
   type TrackWithId,
 } from "@/lib/api/tracks";
 
-import { SORT_OPTIONS, SORT_ORDER_OPTIONS } from "./useFilterState";
+import {
+  DEFAULT_PAGE,
+  SORT_OPTIONS,
+  SORT_ORDER_OPTIONS,
+} from "./filter.config";
 import { useTrackSelection } from "./useTrackSelection";
 import { useTracksFilters } from "./useTracksFilters";
 
@@ -69,7 +73,7 @@ export default function MusicManager() {
     return filterTracks(allTracks ?? []);
   }, [allTracks]);
 
-  const totalPages = paginatedData.meta?.totalPages ?? 0;
+  const totalPages = paginatedData.meta?.totalPages ?? DEFAULT_PAGE;
 
   const selection = useTrackSelection();
 

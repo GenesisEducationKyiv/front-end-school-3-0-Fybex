@@ -3,7 +3,7 @@ import { useEffect } from "react";
 
 import useEventListener from "@/hooks/useEventListener";
 
-import { type FilterState, filterConfig } from "./useFilterState";
+import { type FilterState, filterConfig } from "./filter.config";
 
 const parseParam = <K extends keyof FilterState>(
   params: URLSearchParams,

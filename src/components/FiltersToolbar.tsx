@@ -14,10 +14,10 @@ const NO_GENRES = "No genres found";
 interface FiltersToolbarProps {
   searchTerm: string;
   genre: string;
-  sortBy: string;
-  sortOrder: string;
-  sortOptions: { label: string; value: string }[];
-  sortOrderOptions: { label: string; value: string }[];
+  sortBy: SortField;
+  sortOrder: SortOrder;
+  sortOptions: { label: string; value: SortField }[];
+  sortOrderOptions: { label: string; value: SortOrder }[];
   genres: string[];
   onSearchChange: (value: string) => void;
   onGenreChange: (value: string) => void;

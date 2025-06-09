@@ -1,6 +1,7 @@
 import useDebounce from "@/hooks/useDebounce";
 
-import { PAGE_SIZES, useFilterState } from "./useFilterState";
+import { PAGE_SIZES } from "./filter.config";
+import { useFilterState } from "./useFilterState";
 import { getInitialState, useURLSync } from "./useURLSync";
 
 export function useTracksFilters() {
