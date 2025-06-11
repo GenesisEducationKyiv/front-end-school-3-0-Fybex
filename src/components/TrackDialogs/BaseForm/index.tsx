@@ -1,11 +1,12 @@
 import { type UseFormReturn } from "react-hook-form";
 
-import FormField from "@/components/tracks/dialogs/BaseForm/FormField";
-import GenreSelector from "@/components/tracks/dialogs/BaseForm/GenreSelector";
 import { Button } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
 import { type Genres } from "@/lib/api/genres";
 import { type CreateTrackFormData } from "@/lib/api/tracks";
+
+import FormField from "./FormField";
+import GenreSelector from "./GenreSelector";
 
 interface BaseFormProps {
   form: UseFormReturn<CreateTrackFormData>;

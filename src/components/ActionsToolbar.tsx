@@ -1,6 +1,6 @@
 import { Trash2 } from "lucide-react";
 
-import CreateTrackDialog from "@/components/tracks/dialogs/CreateTrackDialog";
+import CreateTrackDialog from "@/components/TrackDialogs/CreateTrackDialog";
 import {
   AlertDialog,
   AlertDialogAction,

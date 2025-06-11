@@ -6,31 +6,45 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
-import { SORT_OPTIONS, SORT_ORDER_OPTIONS } from "@/hooks/useTracksFilters";
+import type { SortField, SortOrder } from "@/lib/api/tracks";
+
+const ALL_GENRES = "All Genres";
+const NO_GENRES = "No genres found";
 
 interface FiltersToolbarProps {
   searchTerm: string;
-  onSearchChange: (value: string) => void;
   genre: string;
-  availableGenres: string[];
+  sortBy: SortField;
+  sortOrder: SortOrder;
+  sortOptions: { label: string; value: SortField }[];
+  sortOrderOptions: { label: string; value: SortOrder }[];
+  genres: string[];
+  onSearchChange: (value: string) => void;
   onGenreChange: (value: string) => void;
-  sortBy: string;
-  onSortChange: (value: string) => void;
-  sortOrder: string;
-  onSortOrderChange: (value: string) => void;
+  onSortChange: (value: SortField) => void;
+  onSortOrderChange: (value: SortOrder) => void;
 }
 
 export default function FiltersToolbar({
   searchTerm,
-  onSearchChange,
   genre,
-  availableGenres,
-  onGenreChange,
   sortBy,
-  onSortChange,
   sortOrder,
+  genres: rawGenres,
+  sortOptions,
+  sortOrderOptions,
+  onSearchChange,
+  onGenreChange,
+  onSortChange,
   onSortOrderChange,
 }: FiltersToolbarProps) {
+  const genres =
+    rawGenres.length > 0 ? [ALL_GENRES, ...rawGenres] : [NO_GENRES];
+
+  const handleGenreChange = (value: string) => {
+    onGenreChange(![NO_GENRES, ALL_GENRES].includes(value) ? value : "");
+  };
+
   return (
     <div className="flex flex-col sm:flex-row gap-2">
       <Input
@@ -45,13 +59,13 @@ export default function FiltersToolbar({
       <Select
         data-testid="filter-genre"
         value={genre}
-        onValueChange={onGenreChange}
+        onValueChange={handleGenreChange}
       >
         <SelectTrigger className="w-[220px]">
           <SelectValue placeholder="Filter by genre" />
         </SelectTrigger>
         <SelectContent>
-          {availableGenres.map((g) => (
+          {genres.map((g) => (
             <SelectItem key={g} value={g}>
               {g}
             </SelectItem>
@@ -67,7 +81,7 @@ export default function FiltersToolbar({
           <SelectValue placeholder="Sort by..." />
         </SelectTrigger>
         <SelectContent>
-          {SORT_OPTIONS.map((option) => (
+          {sortOptions.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
             </SelectItem>
@@ -83,7 +97,7 @@ export default function FiltersToolbar({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {SORT_ORDER_OPTIONS.map((option) => (
+          {sortOrderOptions.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
             </SelectItem>
