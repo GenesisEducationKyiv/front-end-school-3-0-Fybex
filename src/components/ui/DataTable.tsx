@@ -146,9 +146,6 @@ export function DataTable<
             table.getRowModel().rows.length > 0 &&
             table.getRowModel().rows.map((row) => {
               const rowId = row.original.id;
-              const testId = rowId
-                ? `track-item-${rowId.toString()}`
-                : undefined;
               return (
                 <TableRow
                   className={cn(
@@ -156,7 +153,8 @@ export function DataTable<
                     row.getIsSelected() && "bg-muted"
                   )}
                   data-state={row.getIsSelected() && "selected"}
-                  data-testid={testId}
+                  data-testid="track-item"
+                  data-track-id={rowId.toString()}
                   key={row.id}
                 >
                   {row.getVisibleCells().map((cell) => {

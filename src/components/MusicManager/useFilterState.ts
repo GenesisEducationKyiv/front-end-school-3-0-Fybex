@@ -2,7 +2,7 @@ import { useCallback, useMemo, useReducer } from "react";
 
 import { type FilterState, filterConfig } from "./filter.config";
 
-type FilterAction =
+export type FilterAction =
   | {
       type: "SET_VALUE";
       payload: {
@@ -12,7 +12,7 @@ type FilterAction =
     }
   | { type: "RESET_STATE"; payload: FilterState };
 
-const filterReducer = (
+export const filterReducer = (
   state: FilterState,
   action: FilterAction
 ): FilterState => {
@@ -32,6 +32,25 @@ type Setters = {
   ) => void;
 };
 
+export const createSetters = (
+  setFilterValue: <K extends keyof FilterState>(
+    key: K,
+    value: FilterState[K]
+  ) => void
+): Setters => {
+  return (Object.keys(filterConfig) as (keyof FilterState)[]).reduce(
+    (acc, key) => {
+      const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
+      const setterName = `set${capitalizedKey}` as keyof Setters;
+      acc[setterName] = (value) => {
+        setFilterValue(key, value);
+      };
+      return acc;
+    },
+    {} as Setters
+  );
+};
+
 export function useFilterState(initialState: FilterState) {
   const [filters, dispatch] = useReducer(filterReducer, initialState);
 
@@ -46,23 +65,10 @@ export function useFilterState(initialState: FilterState) {
     dispatch({ type: "RESET_STATE", payload: newState });
   }, []);
 
-  const setters = useMemo<Setters>(() => {
-    const createSetter =
-      <K extends keyof FilterState>(key: K) =>
-      (value: FilterState[K]) => {
-        setFilterValue(key, value);
-      };
-
-    return (Object.keys(filterConfig) as (keyof FilterState)[]).reduce(
-      (acc, key) => {
-        const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
-        const setterName = `set${capitalizedKey}` as keyof Setters;
-        acc[setterName] = createSetter(key);
-        return acc;
-      },
-      {} as Setters
-    );
-  }, [setFilterValue]);
+  const setters = useMemo(
+    () => createSetters(setFilterValue),
+    [setFilterValue]
+  );
 
   return {
     filters,

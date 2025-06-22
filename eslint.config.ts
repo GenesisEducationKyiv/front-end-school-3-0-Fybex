@@ -73,5 +73,11 @@ export default tseslint.config(
         },
       },
     },
+  },
+  {
+    files: ["**/*.ct.tsx", "**/*.ct.ts"],
+    rules: {
+      "@typescript-eslint/unbound-method": "off",
+    },
   }
 );

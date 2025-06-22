@@ -77,7 +77,10 @@ function EditTrackDialog({ track, open, onOpenChange }: EditTrackDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent
+        className="sm:max-w-[425px]"
+        data-testid="edit-track-dialog"
+      >
         <DialogHeader>
           <DialogTitle>Edit Track: {track.title ?? "Unknown"}</DialogTitle>
           <DialogDescription>

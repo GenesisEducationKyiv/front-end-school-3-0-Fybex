@@ -56,12 +56,8 @@ export default function FiltersToolbar({
           onSearchChange(e.target.value);
         }}
       />
-      <Select
-        data-testid="filter-genre"
-        value={genre}
-        onValueChange={handleGenreChange}
-      >
-        <SelectTrigger className="w-[220px]">
+      <Select value={genre} onValueChange={handleGenreChange}>
+        <SelectTrigger className="w-[220px]" data-testid="filter-genre">
           <SelectValue placeholder="Filter by genre" />
         </SelectTrigger>
         <SelectContent>
@@ -72,12 +68,8 @@ export default function FiltersToolbar({
           ))}
         </SelectContent>
       </Select>
-      <Select
-        data-testid="sort-select"
-        value={sortBy}
-        onValueChange={onSortChange}
-      >
-        <SelectTrigger className="w-[180px]">
+      <Select value={sortBy} onValueChange={onSortChange}>
+        <SelectTrigger className="w-[180px]" data-testid="sort-select">
           <SelectValue placeholder="Sort by..." />
         </SelectTrigger>
         <SelectContent>
@@ -88,12 +80,8 @@ export default function FiltersToolbar({
           ))}
         </SelectContent>
       </Select>
-      <Select
-        data-testid="sort-order-select"
-        value={sortOrder}
-        onValueChange={onSortOrderChange}
-      >
-        <SelectTrigger className="w-[150px]">
+      <Select value={sortOrder} onValueChange={onSortOrderChange}>
+        <SelectTrigger className="w-[150px]" data-testid="sort-order-select">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
