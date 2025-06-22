@@ -77,9 +77,7 @@ export default function GenreSelector({
                   const isSelected = selectedGenres.includes(genre);
                   return (
                     <CommandItem
-                      data-testid={`genre-option-${genre
-                        .toLowerCase()
-                        .replace(/\s+/g, "-")}`}
+                      data-testid="genre-option"
                       key={genre}
                       value={genre}
                       onSelect={() => {
