@@ -20,9 +20,6 @@ export default function AudioPlayer() {
   const isPlaying = useAudioPlayerStore((state) => state.isPlaying);
   const setIsPlaying = useAudioPlayerStore((state) => state.setIsPlaying);
   const close = useAudioPlayerStore((state) => state.close);
-  const setTogglePlayPauseFn = useAudioPlayerStore(
-    (state) => state.setTogglePlayPauseFn
-  );
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -53,23 +50,15 @@ export default function AudioPlayer() {
     }
   }, [audioRef, volume]);
 
-  const handlePlayPause = useCallback(() => {
-    if (!audioRef.current || !track) return;
-    if (isPlaying) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play().catch((e: unknown) => {
-        console.warn("Play prevented:", e);
-      });
-    }
-  }, [isPlaying, track]);
-
   useEffect(() => {
-    setTogglePlayPauseFn(handlePlayPause);
-    return () => {
-      setTogglePlayPauseFn(null);
-    };
-  }, [handlePlayPause, setTogglePlayPauseFn]);
+    if (isPlaying) {
+      audioRef.current?.play().catch(() => {
+        setIsPlaying(false);
+      });
+    } else {
+      audioRef.current?.pause();
+    }
+  }, [isPlaying, track, setIsPlaying]);
 
   const handleSeek = useCallback((value: number) => {
     if (!audioRef.current) return;
@@ -105,20 +94,6 @@ export default function AudioPlayer() {
   const handleLoadedMetadata = () => {
     if (audioRef.current) {
       setDuration(audioRef.current.duration);
-
-      const shouldBePlaying = useAudioPlayerStore.getState().isPlaying;
-
-      if (shouldBePlaying) {
-        audioRef.current.play().catch((e: unknown) => {
-          console.warn("Autoplay prevented on metadata load:", e);
-          setIsPlaying(false);
-        });
-      } else {
-        if (!audioRef.current.paused) {
-          audioRef.current.pause();
-        }
-        setIsPlaying(false);
-      }
     }
   };
 
@@ -165,8 +140,7 @@ export default function AudioPlayer() {
 
     if (e.code === "Space" || e.key === " ") {
       e.preventDefault();
-      const toggleFn = useAudioPlayerStore.getState()._toggleFn;
-      toggleFn?.();
+      setIsPlaying(!isPlaying);
     }
   });
 
@@ -222,6 +196,7 @@ export default function AudioPlayer() {
         onError={(e) => {
           console.error("Audio error:", e);
           toast.error("Error playing audio");
+          setIsPlaying(false);
         }}
         onLoadedMetadata={handleLoadedMetadata}
         onPause={handlePause}
