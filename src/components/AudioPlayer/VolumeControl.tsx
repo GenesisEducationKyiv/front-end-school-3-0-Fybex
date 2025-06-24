@@ -16,13 +16,21 @@ export default function VolumeControl({
   onMuteToggle,
 }: VolumeControlProps) {
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
-  const volumeButtonRef = useRef<HTMLButtonElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const hideTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  const handleVolumeMouseEnter = () => {
+  const handleMouseEnter = () => {
+    if (hideTimeout.current) {
+      clearTimeout(hideTimeout.current);
+      hideTimeout.current = null;
+    }
     setShowVolumeSlider(true);
   };
-  const handleVolumeMouseLeave = () => {
-    setShowVolumeSlider(false);
+
+  const handleMouseLeave = () => {
+    hideTimeout.current = setTimeout(() => {
+      setShowVolumeSlider(false);
+    }, 150);
   };
 
   const VolumeIcon = volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
@@ -30,13 +38,13 @@ export default function VolumeControl({
   return (
     <div
       className="relative flex items-center"
-      onMouseEnter={handleVolumeMouseEnter}
-      onMouseLeave={handleVolumeMouseLeave}
+      ref={containerRef}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <Button
         aria-label="Volume"
         className="rounded-full w-8 h-8 z-10"
-        ref={volumeButtonRef}
         size="icon"
         variant="ghost"
         onClick={onMuteToggle}
