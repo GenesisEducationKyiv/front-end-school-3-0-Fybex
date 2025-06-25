@@ -1,0 +1,27 @@
+# ADR N: brief decision title
+
+## Status
+
+[Proposed | Accepted | Deprecated | Superseded] if deprecated, indicate why. If superseded, include a link to the new ADR.
+
+## Context
+
+Describe here the forces that influence the design decision, including technological, cost-related, and project total.
+
+## Decision
+
+Describe here our response to these forces, that is, the design decision that was made. State the decision in full sentences, with active voice ("We will...").
+
+## Rationale
+
+This section answers the question "Why exactly this decision?". Describe here the rationale for the design decision. Also indicate the rationale for significant rejected alternatives. This section may also indicate assumptions, constraints, requirements, and results of evaluations and experiments.
+
+## Consequences
+
+Describe here the resulting context, after applying the decision. All consequences should be listed, not just the "positive" ones.
+
+**Good things:**
+...
+
+**Bad things / Risks:**
+...
