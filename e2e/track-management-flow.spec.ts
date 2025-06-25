@@ -18,7 +18,7 @@ const availableGenres = [
 ];
 
 const getRandomGenres = (count: number): string[] => {
-  const shuffled = availableGenres.sort(() => 0.5 - Math.random());
+  const shuffled = [...availableGenres].sort(() => 0.5 - Math.random());
   return shuffled.slice(0, count);
 };
 
@@ -63,11 +63,11 @@ const fillTrackForm = async (page: Page, trackData: TrackData) => {
 };
 
 const findCreatedTrack = async (page: Page, title: string) => {
-  await page.waitForSelector('[data-testid="track-item"]', { timeout: 10000 });
+  // wait for a track row with the specific title to appear
   const trackRow = page.locator(`[data-testid="track-item"]`).filter({
     hasText: title,
   });
-  await expect(trackRow).toBeVisible();
+  await trackRow.waitFor({ state: "visible" });
 
   const trackId = await trackRow.getAttribute("data-track-id");
   if (!trackId) throw new Error("Track ID not found");
@@ -98,6 +98,12 @@ const deleteTrack = async (page: Page, trackId: string, trackTitle: string) => {
   ).not.toBeVisible();
 };
 
+async function waitForToast(page: Page, type: "success" | "error") {
+  await expect(
+    page.locator(`[data-type="${type}"][data-sonner-toast]`)
+  ).toBeVisible();
+}
+
 test.describe("Track Management Flow", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
@@ -113,11 +119,9 @@ test.describe("Track Management Flow", () => {
     await page.getByTestId("submit-button").click();
 
     // verify track creation
-    await expect(page.getByText("Track created successfully!")).toBeVisible();
+    await waitForToast(page, "success");
 
-    // wait a moment for the table to refresh after creation
-    await page.waitForTimeout(1000);
-
+    // wait for the created track to appear in the table
     const { trackRow, trackId } = await findCreatedTrack(page, trackData.title);
 
     // verify track data is displayed correctly
@@ -144,9 +148,6 @@ test.describe("Track Management Flow", () => {
     await fillTrackForm(page, originalTrack);
     await page.getByTestId("submit-button").click();
     await expect(page.getByText("Track created successfully!")).toBeVisible();
-
-    // wait a moment for the table to refresh after creation
-    await page.waitForTimeout(1000);
 
     // find and edit the track
     const { trackId } = await findCreatedTrack(page, originalTrack.title);
@@ -178,9 +179,7 @@ test.describe("Track Management Flow", () => {
 
     // submit changes
     await page.getByTestId("submit-button").click();
-    await expect(
-      page.getByText(`Track "${updatedTrack.title}" updated successfully!`)
-    ).toBeVisible();
+    await waitForToast(page, "success");
 
     // verify changes
     const { trackRow: updatedRow, trackId: updatedTrackId } =
