@@ -1,6 +1,8 @@
 import { faker } from "@faker-js/faker";
 import { expect, type Page, test } from "@playwright/test";
 
+import { type BaseTrackFormData } from "../src/lib/api/tracks/types";
+
 const availableGenres = [
   "Rock",
   "Pop",
@@ -22,13 +24,7 @@ const getRandomGenres = (count: number): string[] => {
   return shuffled.slice(0, count);
 };
 
-interface TrackData {
-  title: string;
-  artist: string;
-  album: string;
-  genres: string[];
-  coverImage: string;
-}
+type TrackData = Required<BaseTrackFormData>;
 
 const createTestTrack = (): TrackData => ({
   title: `Test Track ${faker.string.uuid().slice(0, 8)}`,
