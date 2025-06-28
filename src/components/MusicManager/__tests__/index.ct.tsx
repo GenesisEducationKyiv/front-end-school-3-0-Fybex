@@ -12,8 +12,7 @@ const generateMockTrack = (index = 0) => ({
   artist: faker.person.fullName(),
   genre: mockGenres[index % mockGenres.length], // ensure variety by cycling
   album: faker.music.album(),
-  duration: faker.number.int({ min: 120, max: 300 }),
-  year: faker.date.past({ years: 30 }).getFullYear(),
+  createdAt: faker.date.past({ years: 30 }),
   url: faker.internet.url(),
 });
 
@@ -45,6 +44,8 @@ const sortTracks = (
         return a.artist.localeCompare(b.artist);
       case "album":
         return a.album.localeCompare(b.album);
+      case "createdAt":
+        return a.createdAt.getTime() - b.createdAt.getTime();
       default:
         return 0;
     }
@@ -232,39 +233,53 @@ test.describe("MusicManager", () => {
     await expectTracksVisible(page, mockTracks);
   });
 
-  test("should handle sorting", async ({ mount, page }) => {
-    if (!mockTracks[0] || !mockTracks[1])
-      throw new Error("No tracks available");
+  test.describe("should handle sorting in ascending and descending order", () => {
+    const sortingTestCases = [
+      {
+        name: "by title",
+        sortOption: "Title",
+        sortField: "title" as const,
+      },
+      {
+        name: "by artist",
+        sortOption: "Artist",
+        sortField: "artist" as const,
+      },
+      {
+        name: "by album",
+        sortOption: "Album",
+        sortField: "album" as const,
+      },
+      {
+        name: "by newest",
+        sortOption: "Newest",
+        sortField: "createdAt" as const,
+      },
+    ] as const;
 
-    await mount(<MusicManager />);
+    for (const testCase of sortingTestCases) {
+      test(testCase.name, async ({ mount, page }) => {
+        if (!mockTracks[0] || !mockTracks[1])
+          throw new Error("No tracks available");
 
-    const sortSelect = page.getByTestId("sort-select");
-    const sortOrderSelect = page.getByTestId("sort-order-select");
+        await mount(<MusicManager />);
 
-    await sortSelect.click();
-    await expect(page.getByRole("option").first()).toBeVisible();
+        const sortSelect = page.getByTestId("sort-select");
+        const sortOrderSelect = page.getByTestId("sort-order-select");
 
-    // sort by title ascending
-    await page.getByRole("option", { name: "Title" }).click();
-    const sortedByTitleAsc = sortTracks(mockTracks, "title", "asc");
-    await expectTracksVisible(page, sortedByTitleAsc);
+        // sort by field ascending
+        await sortSelect.click();
+        await page.getByRole("option", { name: testCase.sortOption }).click();
+        const sortedAsc = sortTracks(mockTracks, testCase.sortField, "asc");
+        await expectTracksVisible(page, sortedAsc);
 
-    // sort by title descending
-    await sortOrderSelect.click();
-    await page.getByRole("option", { name: "Descending" }).click();
-    const sortedByTitleDesc = sortTracks(mockTracks, "title", "desc");
-    await expectTracksVisible(page, sortedByTitleDesc);
-
-    // sort by newest
-    await sortSelect.click();
-    await page.getByRole("option", { name: "Newest" }).click();
-    const sortedByNewest = sortTracks(mockTracks, "year", "desc");
-    await expectTracksVisible(page, sortedByNewest);
-
-    // reset sort
-    await sortSelect.click();
-    await page.getByRole("option", { name: "Title" }).click();
-    await expectTracksVisible(page, mockTracks);
+        // sort by field descending
+        await sortOrderSelect.click();
+        await page.getByRole("option", { name: "Descending" }).click();
+        const sortedDesc = sortTracks(mockTracks, testCase.sortField, "desc");
+        await expectTracksVisible(page, sortedDesc);
+      });
+    }
   });
 
   test("should handle combined filters", async ({ mount, page }) => {
