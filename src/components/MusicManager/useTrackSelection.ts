@@ -8,7 +8,8 @@ export function useTrackSelection() {
   const deleteMutation = useDeleteTracks();
 
   const handleSelectionChange = (selectedIds: TrackId[]) => {
-    setSelectedTrackIds(selectedIds);
+    const uniqueIds = [...new Set(selectedIds)];
+    setSelectedTrackIds(uniqueIds);
   };
 
   const handleDeleteSelected = () => {

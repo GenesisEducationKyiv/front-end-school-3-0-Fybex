@@ -38,8 +38,29 @@ Based on the case requirements, the application includes:
 
 1. Start the development server:
 
-```bash
-    npm start
-```
+    ```bash
+        npm start
+    ```
 
 2. Open your browser and navigate to `http://localhost:3000`.
+
+## Testing Strategy
+
+### Test Types & Placement
+
+- **Unit Tests** (`*.unit.test.ts`): Test individual functions/hooks in `src/components/*/__tests__/`
+- **Integration Tests** (`*.integration.test.ts`): Test component interactions in `src/components/*/__tests__/`
+- **Component Tests** (`*.ct.tsx`): Test UI components in isolation in `src/components/*/__tests__/`
+- **E2E Tests** (`*.spec.ts`): Test complete user workflows in `e2e/`
+
+### Key Commands
+
+```bash
+npm run test:unit          # Unit tests only
+npm run test:integration   # Integration tests only
+npm run test:ct            # Component tests only
+npm run test:e2e           # E2E tests (Chromium only)
+npm run test:e2e:full      # E2E tests (all browsers)
+```
+
+See more in [package.json](./package.json).

@@ -68,6 +68,7 @@ export default function GenreSelector({
             <CommandInput placeholder="Search genre..." />
             <CommandList
               className="max-h-[200px] overflow-y-auto"
+              data-testid="genre-options-list"
               id="genres-list"
             >
               <CommandEmpty>No genre found.</CommandEmpty>
@@ -76,6 +77,7 @@ export default function GenreSelector({
                   const isSelected = selectedGenres.includes(genre);
                   return (
                     <CommandItem
+                      data-testid="genre-option"
                       key={genre}
                       value={genre}
                       onSelect={() => {

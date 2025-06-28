@@ -165,7 +165,12 @@ export function TrackActions({ track }: TrackActionsProps) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button className="h-8 w-8 p-0" variant="ghost">
+          <Button
+            aria-haspopup="menu"
+            className="h-8 w-8 p-0"
+            data-testid={`track-actions-menu-${track.id}`}
+            variant="ghost"
+          >
             <span className="sr-only">Open menu</span>
             <Ellipsis className="h-4 w-4" />
           </Button>

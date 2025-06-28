@@ -159,7 +159,12 @@ export const columns: ColumnDef<TrackWithId>[] = [
   {
     id: "actions",
     header: "",
-    cell: ({ row }) => <TrackActions track={row.original} />,
+    cell: ({ row }) => (
+      <TrackActions
+        data-testid={`track-actions-${row.original.id}`}
+        track={row.original}
+      />
+    ),
     size: 32,
     minSize: 24,
     maxSize: 40,
