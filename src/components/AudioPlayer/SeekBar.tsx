@@ -65,7 +65,7 @@ export default function SeekBar({
       >
         <Slider
           aria-label="Seek track"
-          className="w-full h-2"
+          className="w-full"
           data-testid={`audio-progress-${trackId}`}
           max={duration || 1}
           step={0.1}
