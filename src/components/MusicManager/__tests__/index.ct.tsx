@@ -47,7 +47,7 @@ const sortTracks = (
       case "createdAt":
         return a.createdAt.getTime() - b.createdAt.getTime();
       default:
-        return 0;
+        throw new Error(`Invalid sort field: ${sortField}`);
     }
   });
 

@@ -35,6 +35,81 @@ describe("useTrackSelection", () => {
     expect(result.current.selectedTrackIds).toEqual(ids);
   });
 
+  it("should deduplicate track IDs in selection change", () => {
+    // Arrange
+    const { result } = setup();
+    const idsWithDuplicates = [
+      "track-1",
+      "track-2",
+      "track-1",
+      "track-3",
+      "track-2",
+    ];
+    const expectedUniqueIds = ["track-1", "track-2", "track-3"];
+
+    // Act
+    act(() => {
+      result.current.handleSelectionChange(idsWithDuplicates);
+    });
+
+    // Assert
+    expect(result.current.selectedTrackIds).toEqual(expectedUniqueIds);
+    expect(result.current.selectedTrackIds).toHaveLength(3);
+  });
+
+  it("should handle all duplicate IDs", () => {
+    // Arrange
+    const { result } = setup();
+    const allDuplicates = ["track-1", "track-1", "track-1"];
+    const expectedUniqueIds = ["track-1"];
+
+    // Act
+    act(() => {
+      result.current.handleSelectionChange(allDuplicates);
+    });
+
+    // Assert
+    expect(result.current.selectedTrackIds).toEqual(expectedUniqueIds);
+    expect(result.current.selectedTrackIds).toHaveLength(1);
+  });
+
+  it("should maintain order of first occurrence when deduplicating", () => {
+    // Arrange
+    const { result } = setup();
+    const idsWithDuplicates = [
+      "track-3",
+      "track-1",
+      "track-2",
+      "track-1",
+      "track-3",
+    ];
+    const expectedOrderedIds = ["track-3", "track-1", "track-2"];
+
+    // Act
+    act(() => {
+      result.current.handleSelectionChange(idsWithDuplicates);
+    });
+
+    // Assert
+    expect(result.current.selectedTrackIds).toEqual(expectedOrderedIds);
+  });
+
+  it("should handle empty array selection", () => {
+    // Arrange
+    const { result } = setup();
+    act(() => {
+      result.current.handleSelectionChange(["track-1", "track-2"]);
+    });
+
+    // Act
+    act(() => {
+      result.current.handleSelectionChange([]);
+    });
+
+    // Assert
+    expect(result.current.selectedTrackIds).toEqual([]);
+  });
+
   it("should clear selection", () => {
     // Arrange
     const { result } = setup();
