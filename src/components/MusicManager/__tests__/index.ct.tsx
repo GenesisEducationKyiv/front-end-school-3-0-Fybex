@@ -68,6 +68,26 @@ const expectTracksNotVisible = async (
   }
 };
 
+const waitForSearchResults = async (page: Page, expectedCount: number) => {
+  // wait for loading to start (if any)
+  try {
+    await page.getByTestId("loading-tracks").waitFor({ timeout: 1000 });
+  } catch {
+    // loading might not appear for some searches, that's okay
+  }
+
+  // waiting for loading to finish and results to stabilize
+  await page.waitForFunction((count: number) => {
+    const loadingElements = document.querySelectorAll(
+      '[data-testid="loading-tracks"]'
+    );
+    const trackElements = document.querySelectorAll(
+      '[data-testid="track-item"]'
+    );
+    return loadingElements.length === 0 && trackElements.length === count;
+  }, expectedCount);
+};
+
 const mockEmptyResponse = {
   data: [],
   meta: { totalItems: 0, totalPages: 1, currentPage: 1, limit: 20 },
@@ -154,11 +174,10 @@ test.describe("MusicManager", () => {
     await searchInput.fill(searchTerm);
     await expect(searchInput).toHaveValue(searchTerm);
 
-    // wait for debounce
-    await page.waitForTimeout(500);
+    const matchingTracks = filterTracksBySearch(mockTracks, searchTerm);
+    await waitForSearchResults(page, matchingTracks.length);
 
     // verify only tracks matching search term are visible
-    const matchingTracks = filterTracksBySearch(mockTracks, searchTerm);
     await expectTracksVisible(page, matchingTracks);
 
     // verify non-matching tracks are NOT visible
@@ -171,6 +190,7 @@ test.describe("MusicManager", () => {
     await searchInput.clear();
 
     // check reset – should show all tracks again
+    await waitForSearchResults(page, mockTracks.length);
     await expectTracksVisible(page, mockTracks);
   });
 
@@ -261,24 +281,23 @@ test.describe("MusicManager", () => {
     const searchTerm = mockTracks[0].title.split(" ")[0];
     if (!searchTerm) throw new Error("Invalid search term");
     await searchInput.fill(searchTerm);
-    await page.waitForTimeout(500);
+    let filteredTracks = filterTracksBySearch(mockTracks, searchTerm);
+    await waitForSearchResults(page, filteredTracks.length);
 
     // apply genre filter
     await genreFilter.click();
     const testGenre = mockTracks[0].genre;
     if (!testGenre) throw new Error("No genre available");
     await page.getByRole("option", { name: testGenre }).click();
+    filteredTracks = filterTracksByGenre(filteredTracks, testGenre);
 
     // apply sort
     await sortSelect.click();
     await page.getByRole("option", { name: "Artist" }).click();
 
     // verify combined filtering and sorting results
-    let filteredTracks = filterTracksBySearch(mockTracks, searchTerm);
-    filteredTracks = filterTracksByGenre(filteredTracks, testGenre);
-    const finalResults = sortTracks(filteredTracks, "artist", "asc");
-
     // should show only tracks that match search AND genre, sorted by artist
+    const finalResults = sortTracks(filteredTracks, "artist", "asc");
     await expectTracksVisible(page, finalResults);
 
     // verify tracks that don't match both criteria are NOT visible
@@ -293,7 +312,6 @@ test.describe("MusicManager", () => {
     await page.getByRole("option", { name: "All Genres" }).click();
     await sortSelect.click();
     await page.getByRole("option", { name: "Newest" }).click();
-    await page.waitForTimeout(500);
     await expectTracksVisible(page, mockTracks);
   });
 
