@@ -1,0 +1,60 @@
+{
+  "author": "",
+  "dependencies": {
+    "@connectrpc/connect": "^2.0.2",
+    "@connectrpc/connect-fastify": "^2.0.2",
+    "@connectrpc/connect-node": "^2.0.2",
+    "@fastify/cors": "^11.0.0",
+    "@music-app/proto": "*",
+    "@types/node": "^22.13.9",
+    "dotenv": "^16.4.7",
+    "dotenv-expand": "^12.0.1",
+    "fastify": "^5.2.1",
+    "nodemon": "^3.1.9",
+    "pino-pretty": "^13.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2",
+    "zod": "^3.24.2"
+  },
+  "description": "An app for managing music tracks via gRPC.",
+  "devDependencies": {
+    "@bufbuild/buf": "^1.55.1",
+    "@bufbuild/protobuf": "^2.6.0",
+    "@bufbuild/protoc-gen-es": "^2.6.0",
+    "@connectrpc/connect-web": "^2.0.2",
+    "@eslint/js": "^9.30.0",
+    "@types/supertest": "^6.0.2",
+    "@vitest/coverage-v8": "^3.0.7",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
+    "jiti": "^2.4.2",
+    "supertest": "^7.0.0",
+    "typescript-eslint": "^8.35.0",
+    "vitest": "^3.0.7"
+  },
+  "engines": {
+    "node": ">=v20.13.1",
+    "npm": ">=v10.5.2"
+  },
+  "keywords": [],
+  "license": "ISC",
+  "main": "dist/index.js",
+  "name": "@music-app/server",
+  "scripts": {
+    "bd:reset": "rm -rf ./data && cp -r ./data-initial ./data",
+    "build": "tsc",
+    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "dev:with-proto": "npm run proto:generate:build && npm run dev",
+    "lint": "eslint src --ext .ts",
+    "proto:generate:build": "npm run generate:build --workspace=@music-app/proto",
+    "seed": "ts-node src/seed.ts",
+    "seed:prod": "node dist/seed.js",
+    "start": "node dist/index.js",
+    "test": "npm run proto:generate:build && vitest run",
+    "test:ci": "npm run proto:generate:build && vitest run --reporter=verbose",
+    "test:coverage": "npm run proto:generate:build && vitest run --coverage",
+    "test:watch": "npm run proto:generate:build && vitest",
+    "typecheck": "npm run proto:generate:build && tsc --noEmit"
+  },
+  "version": "1.0.0"
+}
