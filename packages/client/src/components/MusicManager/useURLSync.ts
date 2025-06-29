@@ -3,7 +3,12 @@ import { useEffect } from "react";
 
 import useEventListener from "@/hooks/useEventListener";
 
-import { type FilterState, filterConfig } from "./filter.config";
+import {
+  type FilterState,
+  filterConfig,
+  ORDER_PARAM_VALUES,
+  SORT_PARAM_VALUES,
+} from "./filter.config";
 
 const parseParam = <K extends keyof FilterState>(
   params: URLSearchParams,
@@ -38,7 +43,19 @@ const buildURLParams = (state: FilterState): URLSearchParams => {
     const value = state[k];
 
     if (value !== config.defaultValue && value !== "") {
-      params.set(k, String(value));
+      if (key === "sort") {
+        params.set(
+          key,
+          SORT_PARAM_VALUES[value as keyof typeof SORT_PARAM_VALUES]
+        );
+      } else if (key === "order") {
+        params.set(
+          key,
+          ORDER_PARAM_VALUES[value as keyof typeof ORDER_PARAM_VALUES]
+        );
+      } else {
+        params.set(key, String(value));
+      }
     }
   });
 

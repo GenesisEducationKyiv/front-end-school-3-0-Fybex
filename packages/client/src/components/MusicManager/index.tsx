@@ -1,3 +1,5 @@
+import { create } from "@music-app/proto";
+import { GetTracksRequestSchema, type Track } from "@music-app/proto/tracks";
 import { useMemo } from "react";
 
 import ActionsToolbar from "@/components/ActionsToolbar";
@@ -7,12 +9,7 @@ import { useAudioPlayerStore } from "@/components/AudioPlayer/useAudioPlayerStor
 import FiltersToolbar from "@/components/FiltersToolbar";
 import TracksTable from "@/components/TracksTable";
 import { useGetGenres } from "@/lib/api/genres";
-import {
-  useGetTracks,
-  type FetchTracksOptions,
-  type Track,
-  type TrackWithId,
-} from "@/lib/api/tracks";
+import { useGetTracks } from "@/lib/api/tracks";
 
 import {
   DEFAULT_PAGE,
@@ -23,20 +20,13 @@ import { useTrackSelection } from "./useTrackSelection";
 import { useTracksFilters } from "./useTracksFilters";
 
 const INITIAL_DATA = {
-  data: [],
-  meta: { totalItems: 0, totalPages: 0, currentPage: 1, limit: 10 },
-};
-
-const hasValidId = (track: Track): track is TrackWithId => {
-  return typeof track.id === "string" && track.id.length > 0;
-};
-
-const filterTracks = (tracks: Track[]): TrackWithId[] => {
-  return tracks.filter(hasValidId);
+  tracks: [],
+  meta: { total: 0, totalPages: 0, page: 1, limit: 10 },
 };
 
 export default function MusicManager() {
-  const { data: genres = [] } = useGetGenres();
+  const { data: genresResponse } = useGetGenres();
+  const genres = genresResponse?.genres ?? [];
 
   const {
     genre,
@@ -55,22 +45,21 @@ export default function MusicManager() {
     setLimit,
   } = useTracksFilters();
 
-  const queryOptions: FetchTracksOptions = {
+  const queryOptions = create(GetTracksRequestSchema, {
     page,
     limit,
-    search: debouncedSearch,
-    genre: genre,
-    sort: sort,
-    order: order,
-    artist: undefined, // * "search" is used instead
-  };
+    ...(debouncedSearch && { search: debouncedSearch }),
+    ...(genre && { genre }),
+    ...(sort && { sort }),
+    ...(order && { order }),
+  });
 
   const { data: paginatedData = INITIAL_DATA, isLoading } =
     useGetTracks(queryOptions);
 
-  const allTracks = paginatedData.data;
+  const allTracks = paginatedData.tracks;
   const tracks = useMemo(() => {
-    return filterTracks(allTracks ?? []);
+    return allTracks;
   }, [allTracks]);
 
   const totalPages = paginatedData.meta?.totalPages ?? DEFAULT_PAGE;
@@ -82,7 +71,7 @@ export default function MusicManager() {
   const setTrack = useAudioPlayerStore((state) => state.setTrack);
   const togglePlayPause = useAudioPlayerStore((state) => state.togglePlayPause);
 
-  const handleTrackClick = (clickedTrack: TrackWithId) => {
+  const handleTrackClick = (clickedTrack: Track) => {
     if (clickedTrack.id === currentTrack?.id) {
       togglePlayPause();
     } else {

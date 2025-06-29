@@ -1,4 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { create } from "@music-app/proto";
+import { UpdateTrackRequestSchema, type Track } from "@music-app/proto/tracks";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -11,31 +13,28 @@ import {
   DialogTitle,
 } from "@/components/ui/Dialog";
 import { useGetGenres } from "@/lib/api/genres";
-import {
-  editTrackSchema,
-  useUpdateTrack,
-  type EditTrackFormData,
-  type TrackWithId,
-} from "@/lib/api/tracks";
+import { useUpdateTrack } from "@/lib/api/tracks";
 
 import BaseForm from "./BaseForm";
+import { trackFormSchema, type TrackFormData } from "./types";
 
 interface EditTrackDialogProps {
-  track: TrackWithId;
+  track: Track;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 function EditTrackDialog({ track, open, onOpenChange }: EditTrackDialogProps) {
-  const { data: availableGenres = [] } = useGetGenres();
+  const { data: genresResponse } = useGetGenres();
+  const availableGenres = genresResponse?.genres ?? [];
 
-  const form = useForm<EditTrackFormData>({
-    resolver: zodResolver(editTrackSchema),
+  const form = useForm<TrackFormData>({
+    resolver: zodResolver(trackFormSchema),
     defaultValues: {
-      title: track.title ?? "",
-      artist: track.artist ?? "",
+      title: track.title,
+      artist: track.artist,
       album: track.album ?? "",
-      genres: track.genres ?? [],
+      genres: track.genres,
       coverImage: track.coverImage ?? "",
     },
     mode: "onChange",
@@ -44,10 +43,10 @@ function EditTrackDialog({ track, open, onOpenChange }: EditTrackDialogProps) {
   useEffect(() => {
     if (open) {
       form.reset({
-        title: track.title ?? "",
-        artist: track.artist ?? "",
+        title: track.title,
+        artist: track.artist,
         album: track.album ?? "",
-        genres: track.genres ?? [],
+        genres: track.genres,
         coverImage: track.coverImage ?? "",
       });
     }
@@ -55,24 +54,32 @@ function EditTrackDialog({ track, open, onOpenChange }: EditTrackDialogProps) {
 
   const mutation = useUpdateTrack();
 
-  const onSubmit = (data: EditTrackFormData) => {
+  const onSubmit = (data: TrackFormData) => {
     console.log("Edit track form submitted:", { trackId: track.id, data });
-    mutation.mutate(
-      { id: track.id, data },
-      {
-        onSuccess: (updatedTrack) => {
-          console.log("Track updated successfully:", updatedTrack);
-          toast.success(
-            `Track "${updatedTrack.title ?? "Unknown"}" updated successfully!`
-          );
-          onOpenChange(false);
-        },
-        onError: (error: Error) => {
-          console.error("Failed to update track:", error);
-          toast.error(`Failed to update track: ${error.message}`);
-        },
-      }
-    );
+
+    const updateData = create(UpdateTrackRequestSchema, {
+      id: track.id,
+      title: data.title,
+      artist: data.artist,
+      genres: data.genres,
+      ...(data.album && { album: data.album }),
+      ...(data.coverImage && { coverImage: data.coverImage }),
+    });
+
+    mutation.mutate(updateData, {
+      onSuccess: (response) => {
+        console.log("Track updated successfully:", response);
+        const updatedTrack = response.track;
+        if (updatedTrack) {
+          toast.success(`Track "${updatedTrack.title}" updated successfully!`);
+        }
+        onOpenChange(false);
+      },
+      onError: (error: Error) => {
+        console.error("Failed to update track:", error);
+        toast.error(`Failed to update track: ${error.message}`);
+      },
+    });
   };
 
   return (
@@ -82,7 +89,7 @@ function EditTrackDialog({ track, open, onOpenChange }: EditTrackDialogProps) {
         data-testid="edit-track-dialog"
       >
         <DialogHeader>
-          <DialogTitle>Edit Track: {track.title ?? "Unknown"}</DialogTitle>
+          <DialogTitle>Edit Track: {track.title}</DialogTitle>
           <DialogDescription>
             Update the details for this track.
           </DialogDescription>

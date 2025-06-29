@@ -1,19 +1,20 @@
+import { type Track } from "@music-app/proto/tracks";
+
 import { DataTable } from "@/components/ui/DataTable";
-import { type TrackWithId } from "@/lib/api/tracks";
 
 import { columns } from "./columns";
 import { TracksTableBodySkeleton } from "./TracksTableBodySkeleton";
 
 interface TracksTableProps {
-  tracks: TrackWithId[];
+  tracks: Track[];
   isLoading: boolean;
-  currentTrack: TrackWithId | null;
+  currentTrack: Track | null;
   isPlaying: boolean;
   page: number;
   limit: number;
   pageSizes: number[];
   totalPages: number;
-  onPlayTrack: (track: TrackWithId) => void;
+  onPlayTrack: (track: Track) => void;
   onSelectionChange: (selectedIds: string[]) => void;
   onPaginationChange: (newPage: number, newLimit: number) => void;
 }

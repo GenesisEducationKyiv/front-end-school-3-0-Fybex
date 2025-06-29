@@ -2,19 +2,19 @@ import { type UseFormReturn } from "react-hook-form";
 
 import { Button } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
-import { type Genres } from "@/lib/api/genres";
-import { type CreateTrackFormData } from "@/lib/api/tracks";
+
+import { type TrackFormData } from "../types";
 
 import FormField from "./FormField";
 import GenreSelector from "./GenreSelector";
 
 interface BaseFormProps {
-  form: UseFormReturn<CreateTrackFormData>;
+  form: UseFormReturn<TrackFormData>;
   isLoading: boolean;
   submitButtonText: string;
-  availableGenres: Genres;
+  availableGenres: string[];
   dialogType: "create" | "edit";
-  onSubmit: (data: CreateTrackFormData) => void;
+  onSubmit: (data: TrackFormData) => void;
   onCancel?: () => void;
 }
 

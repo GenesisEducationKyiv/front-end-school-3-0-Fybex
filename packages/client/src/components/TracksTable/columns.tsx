@@ -1,3 +1,4 @@
+import { type Track } from "@music-app/proto/tracks";
 import { type ColumnDef } from "@tanstack/react-table";
 import { Pause, Play } from "lucide-react";
 
@@ -5,7 +6,6 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { TrackCover } from "@/components/ui/TrackCover";
-import { type TrackWithId } from "@/lib/api/tracks";
 
 import { TrackActions } from "./TrackActions";
 
@@ -15,12 +15,12 @@ export interface ColumnMeta {
 }
 
 export interface TrackTableMeta {
-  currentTrack: TrackWithId | null;
+  currentTrack: Track | null;
   isPlaying: boolean;
-  onPlayTrack: (track: TrackWithId) => void;
+  onPlayTrack: (track: Track) => void;
 }
 
-const selectionColumn: ColumnDef<TrackWithId> = {
+const selectionColumn: ColumnDef<Track> = {
   id: "select",
   header: ({ table }) => (
     <Checkbox
@@ -55,7 +55,7 @@ const selectionColumn: ColumnDef<TrackWithId> = {
   },
 };
 
-export const columns: ColumnDef<TrackWithId>[] = [
+export const columns: ColumnDef<Track>[] = [
   selectionColumn,
   {
     accessorKey: "coverImage",
@@ -71,7 +71,7 @@ export const columns: ColumnDef<TrackWithId>[] = [
       return (
         <div className="relative w-10 h-10">
           <TrackCover
-            alt={track.title ?? "Track"}
+            alt={track.title}
             className="w-full h-full"
             iconSize={16}
             src={cover ?? null}
@@ -80,8 +80,8 @@ export const columns: ColumnDef<TrackWithId>[] = [
             <Button
               aria-label={
                 isCurrent && meta.isPlaying
-                  ? `Pause ${track.title ?? "Track"}`
-                  : `Play ${track.title ?? "Track"}`
+                  ? `Pause ${track.title}`
+                  : `Play ${track.title}`
               }
               className="absolute inset-0 flex items-center justify-center w-full h-full rounded bg-black/20 hover:bg-black/40 transition-colors opacity-0 group-hover:opacity-100 focus-within:opacity-100"
               size="icon"
@@ -112,7 +112,7 @@ export const columns: ColumnDef<TrackWithId>[] = [
     header: "Title",
     cell: ({ row }) => (
       <span data-testid={`track-item-${row.original.id}-title`}>
-        {row.original.title ?? "Unknown Title"}
+        {row.original.title}
       </span>
     ),
     meta: {
@@ -124,7 +124,7 @@ export const columns: ColumnDef<TrackWithId>[] = [
     header: "Artist",
     cell: ({ row }) => (
       <span data-testid={`track-item-${row.original.id}-artist`}>
-        {row.original.artist ?? "Unknown Artist"}
+        {row.original.artist}
       </span>
     ),
     meta: {
@@ -144,7 +144,7 @@ export const columns: ColumnDef<TrackWithId>[] = [
     header: "Genres",
     cell: ({ row }) => (
       <div className="flex flex-wrap gap-1">
-        {(row.original.genres ?? []).map((genre: string) => (
+        {row.original.genres.map((genre: string) => (
           <Badge key={genre} variant="secondary">
             {genre}
           </Badge>

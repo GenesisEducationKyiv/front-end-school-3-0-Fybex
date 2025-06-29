@@ -1,7 +1,7 @@
 import { faker } from "@faker-js/faker";
 import { expect, type Page, test } from "@playwright/test";
 
-import { type BaseTrackFormData } from "../src/lib/api/tracks/types";
+import { type TrackFormData } from "../src/components/TrackDialogs/types";
 
 const availableGenres = [
   "Rock",
@@ -24,7 +24,7 @@ const getRandomGenres = (count: number): string[] => {
   return shuffled.slice(0, count);
 };
 
-type TrackData = Required<BaseTrackFormData>;
+type TrackData = Required<TrackFormData>;
 
 const createTestTrack = (): TrackData => ({
   title: `Test Track ${faker.string.uuid().slice(0, 8)}`,
@@ -71,7 +71,7 @@ const findCreatedTrack = async (page: Page, title: string) => {
   return { trackRow, trackId };
 };
 
-const deleteTrack = async (page: Page, trackId: string, trackTitle: string) => {
+const deleteTrack = async (page: Page, trackId: string) => {
   // open actions menu
   const actionsButton = page.getByTestId(`track-actions-menu-${trackId}`);
   await actionsButton.click();
@@ -84,9 +84,7 @@ const deleteTrack = async (page: Page, trackId: string, trackTitle: string) => {
   await page.getByTestId("confirm-delete").click();
 
   // verify deletion success
-  await expect(
-    page.getByText(`Track "${trackTitle}" deleted successfully!`)
-  ).toBeVisible();
+  await waitForToast(page, "success");
 
   // verify track is removed from table
   await expect(
@@ -95,9 +93,11 @@ const deleteTrack = async (page: Page, trackId: string, trackTitle: string) => {
 };
 
 async function waitForToast(page: Page, type: "success" | "error") {
-  await expect(
-    page.locator(`[data-type="${type}"][data-sonner-toast]`)
-  ).toBeVisible();
+  const toast = page
+    .locator(`[data-type="${type}"][data-sonner-toast]`)
+    .first();
+  await expect(toast).toBeVisible();
+  await toast.waitFor({ state: "hidden", timeout: 10000 });
 }
 
 test.describe("Track Management Flow", () => {
@@ -130,7 +130,7 @@ test.describe("Track Management Flow", () => {
     await expect(genreBadges.first()).toBeVisible();
 
     // delete the track
-    await deleteTrack(page, trackId, trackData.title);
+    await deleteTrack(page, trackId);
   });
 
   test("should create, edit, and delete a track (full lifecycle)", async ({
@@ -143,7 +143,7 @@ test.describe("Track Management Flow", () => {
     await openCreateTrackDialog(page);
     await fillTrackForm(page, originalTrack);
     await page.getByTestId("submit-button").click();
-    await expect(page.getByText("Track created successfully!")).toBeVisible();
+    await waitForToast(page, "success");
 
     // find and edit the track
     const { trackId } = await findCreatedTrack(page, originalTrack.title);
@@ -184,7 +184,7 @@ test.describe("Track Management Flow", () => {
     await expect(updatedRow.getByText(updatedTrack.artist)).toBeVisible();
 
     // delete the track
-    await deleteTrack(page, updatedTrackId, updatedTrack.title);
+    await deleteTrack(page, updatedTrackId);
   });
 
   test("should handle track creation cancellation", async ({ page }) => {

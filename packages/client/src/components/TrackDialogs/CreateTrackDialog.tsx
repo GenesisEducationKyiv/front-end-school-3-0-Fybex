@@ -1,4 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { create } from "@music-app/proto";
+import { CreateTrackRequestSchema } from "@music-app/proto/tracks";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -12,13 +14,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/Dialog";
 import { useGetGenres } from "@/lib/api/genres";
-import {
-  createTrackSchema,
-  useCreateTrack,
-  type CreateTrackFormData,
-} from "@/lib/api/tracks";
+import { useCreateTrack } from "@/lib/api/tracks";
 
 import BaseForm from "./BaseForm";
+import { trackFormSchema, type TrackFormData } from "./types";
 
 interface CreateTrackDialogProps {
   children: React.ReactNode;
@@ -27,10 +26,11 @@ interface CreateTrackDialogProps {
 function CreateTrackDialog({ children }: CreateTrackDialogProps) {
   const [open, setOpen] = useState(false);
 
-  const { data: availableGenres = [] } = useGetGenres();
+  const { data: genresResponse } = useGetGenres();
+  const availableGenres = genresResponse?.genres ?? [];
 
-  const form = useForm<CreateTrackFormData>({
-    resolver: zodResolver(createTrackSchema),
+  const form = useForm<TrackFormData>({
+    resolver: zodResolver(trackFormSchema),
     defaultValues: {
       title: "",
       artist: "",
@@ -43,10 +43,21 @@ function CreateTrackDialog({ children }: CreateTrackDialogProps) {
 
   const mutation = useCreateTrack();
 
-  const onSubmit = (data: CreateTrackFormData) => {
-    mutation.mutate(data, {
-      onSuccess: () => {
-        toast.success("Track created successfully!");
+  const onSubmit = (data: TrackFormData) => {
+    const createData = create(CreateTrackRequestSchema, {
+      title: data.title,
+      artist: data.artist,
+      genres: data.genres,
+      ...(data.album && { album: data.album }),
+      ...(data.coverImage && { coverImage: data.coverImage }),
+    });
+
+    mutation.mutate(createData, {
+      onSuccess: (response) => {
+        const createdTrack = response.track;
+        if (createdTrack) {
+          toast.success(`Track "${createdTrack.title}" created successfully!`);
+        }
         form.reset();
         setOpen(false);
       },

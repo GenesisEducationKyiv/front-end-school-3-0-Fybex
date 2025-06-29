@@ -1,3 +1,5 @@
+import { create } from "@music-app/proto";
+import { type Track, DeleteTrackRequestSchema } from "@music-app/proto/tracks";
 import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
 
@@ -12,10 +14,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/AlertDialog";
-import { type TrackWithId, useDeleteTrack } from "@/lib/api/tracks";
+import { useDeleteTrack } from "@/lib/api/tracks";
 
 interface DeleteTrackDialogProps {
-  track: TrackWithId;
+  track: Track;
   children: ReactNode;
   onDialogClose?: () => void;
 }
@@ -30,11 +32,13 @@ function DeleteTrackDialog({
   const mutation = useDeleteTrack();
 
   const handleDelete = () => {
-    mutation.mutate(track.id, {
+    const deleteData = create(DeleteTrackRequestSchema, {
+      id: track.id,
+    });
+
+    mutation.mutate(deleteData, {
       onSuccess: () => {
-        toast.success(
-          `Track "${track.title ?? "Unknown"}" deleted successfully!`
-        );
+        toast.success(`Track "${track.title}" deleted successfully!`);
         setOpen(false);
       },
       onError: (error: Error) => {
@@ -59,12 +63,8 @@ function DeleteTrackDialog({
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
             This action cannot be undone. This will permanently delete the track
-            <span className="font-semibold">
-              {" "}
-              {track.title ?? "Unknown"}
-            </span>{" "}
-            by
-            <span className="font-semibold"> {track.artist ?? "Unknown"}</span>.
+            <span className="font-semibold"> {track.title}</span> by
+            <span className="font-semibold"> {track.artist}</span>.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

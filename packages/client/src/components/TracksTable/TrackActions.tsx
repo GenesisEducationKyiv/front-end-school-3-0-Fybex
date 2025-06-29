@@ -1,3 +1,4 @@
+import { type Track } from "@music-app/proto/tracks";
 import { Edit, Ellipsis, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -20,11 +21,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { Input } from "@/components/ui/Input";
-import { useUploadTrackFile, type TrackWithId } from "@/lib/api/tracks";
+import { useUploadTrackFile } from "@/lib/api/tracks";
 import { cn } from "@/lib/utils";
 
 interface TrackActionsProps {
-  track: TrackWithId;
+  track: Track;
 }
 
 function UploadTrackDialog({
@@ -32,7 +33,7 @@ function UploadTrackDialog({
   open,
   onOpenChange,
 }: {
-  track: TrackWithId;
+  track: Track;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -73,11 +74,16 @@ function UploadTrackDialog({
     fileInputRef.current?.click();
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!file) return;
 
     uploadMutation.mutate(
-      { trackId: track.id, file },
+      {
+        trackId: track.id,
+        filename: file.name,
+        content: new Uint8Array(await file.arrayBuffer()),
+        contentType: file.type,
+      },
       {
         onSuccess: () => {
           toast.success("Audio file uploaded successfully!");
@@ -143,7 +149,9 @@ function UploadTrackDialog({
           </Button>
           <Button
             disabled={!file || uploadMutation.isPending}
-            onClick={handleUpload}
+            onClick={() => {
+              void handleUpload();
+            }}
           >
             {uploadMutation.isPending
               ? "Uploading..."

@@ -1,38 +1,74 @@
+import { TimestampSchema } from "@bufbuild/protobuf/wkt";
 import { faker } from "@faker-js/faker";
+import {
+  create,
+  type ExcludeProtobufInternals,
+  GenresService,
+  GetGenresResponseSchema,
+  type GetTracksRequest,
+  GetTracksResponseSchema,
+  PaginationMetaSchema,
+  type Track as ProtobufTrack,
+  SortField,
+  SortOrder,
+  TracksService,
+} from "@music-app/proto";
 import { expect, test } from "@playwright/experimental-ct-react";
 import { type Page } from "playwright-core";
+
+import { getMockRouter } from "@/playwrightFixtures";
 
 import MusicManager from "../index";
 
 const mockGenres = ["Rock", "Jazz", "Classical", "Electronic", "Country"];
 
-const generateMockTrack = (index = 0) => ({
-  id: faker.string.uuid(),
-  title: faker.music.songName(),
-  artist: faker.person.fullName(),
-  genre: mockGenres[index % mockGenres.length], // ensure variety by cycling
-  album: faker.music.album(),
-  createdAt: faker.date.past({ years: 30 }),
-  url: faker.internet.url(),
-});
+type Track = ExcludeProtobufInternals<ProtobufTrack>;
+
+function dateToTimestamp(date: Date) {
+  return create(TimestampSchema, {
+    seconds: BigInt(Math.floor(date.getTime() / 1000)),
+    nanos: (date.getTime() % 1000) * 1000000,
+  });
+}
+
+const generateMockTrack = (index = 0): Track => {
+  const randomGenre = mockGenres[index % mockGenres.length];
+  if (!randomGenre) throw new Error("No genre available");
+
+  const songName = faker.music.songName();
+  return {
+    id: faker.string.uuid(),
+    title: songName,
+    artist: faker.person.fullName(),
+    album: faker.music.album(),
+    genres: [randomGenre],
+    slug: faker.helpers.slugify(songName),
+    coverImage: faker.image.url(),
+    audioFile: faker.internet.url(),
+    createdAt: dateToTimestamp(faker.date.past({ years: 30 })),
+    updatedAt: dateToTimestamp(faker.date.recent()),
+  };
+};
 
 const mockTracks = Array.from({ length: 6 }, (_, index) =>
   generateMockTrack(index)
 );
 
-const filterTracksBySearch = (tracks: typeof mockTracks, searchTerm: string) =>
+const filterTracksBySearch = (tracks: Track[], searchTerm: string) =>
   tracks.filter(
     (track) =>
       track.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       track.artist.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      track.album.toLowerCase().includes(searchTerm.toLowerCase())
+      track.album?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-const filterTracksByGenre = (tracks: typeof mockTracks, genre: string) =>
-  tracks.filter((track) => track.genre?.toLowerCase() === genre.toLowerCase());
+const filterTracksByGenre = (tracks: Track[], genre: string) =>
+  tracks.filter((track) =>
+    track.genres.some((g) => g.toLowerCase() === genre.toLowerCase())
+  );
 
 const sortTracks = (
-  tracks: typeof mockTracks,
+  tracks: Track[],
   sortField: string,
   sortOrder: "asc" | "desc" = "asc"
 ) => {
@@ -43,9 +79,11 @@ const sortTracks = (
       case "artist":
         return a.artist.localeCompare(b.artist);
       case "album":
-        return a.album.localeCompare(b.album);
+        return (a.album ?? "").localeCompare(b.album ?? "");
       case "createdAt":
-        return a.createdAt.getTime() - b.createdAt.getTime();
+        return (
+          Number(a.createdAt?.seconds ?? 0) - Number(b.createdAt?.seconds ?? 0)
+        );
       default:
         throw new Error(`Invalid sort field: ${sortField}`);
     }
@@ -54,16 +92,13 @@ const sortTracks = (
   return sortOrder === "desc" ? sorted.reverse() : sorted;
 };
 
-const expectTracksVisible = async (page: Page, tracks: typeof mockTracks) => {
+const expectTracksVisible = async (page: Page, tracks: Track[]) => {
   for (const track of tracks) {
     await expect(page.getByText(track.title)).toBeVisible();
   }
 };
 
-const expectTracksNotVisible = async (
-  page: Page,
-  tracks: typeof mockTracks
-) => {
+const expectTracksNotVisible = async (page: Page, tracks: Track[]) => {
   for (const track of tracks) {
     await expect(page.getByText(track.title)).not.toBeVisible();
   }
@@ -89,58 +124,76 @@ const waitForSearchResults = async (page: Page, expectedCount: number) => {
   }, expectedCount);
 };
 
-const mockEmptyResponse = {
-  data: [],
-  meta: { totalItems: 0, totalPages: 1, currentPage: 1, limit: 20 },
-};
+const mockEmptyResponse = create(GetTracksResponseSchema, {
+  tracks: [],
+  meta: create(PaginationMetaSchema, {
+    total: 0,
+    totalPages: 1,
+    page: 1,
+    limit: 20,
+  }),
+});
 
 test.describe("MusicManager", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.route("**/api/genres", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(mockGenres),
-      });
+  test.beforeEach(async ({ context }) => {
+    const mock = getMockRouter(context);
+    await mock.service(GenresService, {
+      getGenres() {
+        return create(GetGenresResponseSchema, {
+          genres: mockGenres,
+        });
+      },
     });
 
-    await page.route("**/api/tracks*", async (route) => {
-      const url = route.request().url();
-      const urlParams = new URLSearchParams(url.split("?")[1] ?? "");
+    // Mock tracks service
+    await mock.service(TracksService, {
+      getTracks(request: GetTracksRequest) {
+        const search = request.search ?? "";
+        const genre = request.genre ?? "";
+        const sort = request.sort;
+        const order = request.order;
 
-      const search = urlParams.get("search") ?? "";
-      const genre = urlParams.get("genre") ?? "";
-      const sort = urlParams.get("sort") ?? "";
+        let filteredTracks = [...mockTracks];
 
-      let filteredTracks = [...mockTracks];
+        if (search) {
+          filteredTracks = filterTracksBySearch(filteredTracks, search);
+        }
 
-      if (search) {
-        filteredTracks = filterTracksBySearch(filteredTracks, search);
-      }
+        if (genre) {
+          filteredTracks = filterTracksByGenre(filteredTracks, genre);
+        }
 
-      if (genre) {
-        filteredTracks = filterTracksByGenre(filteredTracks, genre);
-      }
+        if (sort) {
+          let sortField = "title";
+          switch (sort) {
+            case SortField.TITLE:
+              sortField = "title";
+              break;
+            case SortField.ARTIST:
+              sortField = "artist";
+              break;
+            case SortField.ALBUM:
+              sortField = "album";
+              break;
+            case SortField.CREATED_AT:
+              sortField = "createdAt";
+              break;
+          }
 
-      if (sort) {
-        filteredTracks = sortTracks(filteredTracks, sort, "asc");
-      }
+          const sortOrder = order === SortOrder.DESC ? "desc" : "asc";
+          filteredTracks = sortTracks(filteredTracks, sortField, sortOrder);
+        }
 
-      const response = {
-        data: filteredTracks,
-        meta: {
-          totalItems: filteredTracks.length,
-          totalPages: Math.ceil(filteredTracks.length / 20),
-          currentPage: 1,
-          limit: 20,
-        },
-      };
-
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(response),
-      });
+        return create(GetTracksResponseSchema, {
+          tracks: filteredTracks,
+          meta: create(PaginationMetaSchema, {
+            total: filteredTracks.length,
+            totalPages: Math.ceil(filteredTracks.length / 20),
+            page: 1,
+            limit: 20,
+          }),
+        });
+      },
     });
   });
 
@@ -148,7 +201,11 @@ test.describe("MusicManager", () => {
     mount,
     page,
   }) => {
-    await mount(<MusicManager />);
+    await mount(<MusicManager />, {
+      hooksConfig: {
+        baseUrl: "http://localhost:8000",
+      },
+    });
 
     // verify all UI elements are present
     await expect(page.getByTestId("search-input")).toBeVisible();
@@ -163,7 +220,11 @@ test.describe("MusicManager", () => {
   });
 
   test("should handle search functionality", async ({ mount, page }) => {
-    await mount(<MusicManager />);
+    await mount(<MusicManager />, {
+      hooksConfig: {
+        baseUrl: "http://localhost:8000",
+      },
+    });
 
     const searchInput = page.getByTestId("search-input");
     const firstTrack = mockTracks[0];
@@ -198,10 +259,14 @@ test.describe("MusicManager", () => {
   test("should handle genre filtering", async ({ mount, page }) => {
     if (!mockTracks[0] || !mockTracks[1])
       throw new Error("No tracks available");
-    const testGenre = mockTracks[0].genre;
+    const testGenre = mockTracks[0].genres[0];
     if (!testGenre) throw new Error("No genre available");
 
-    await mount(<MusicManager />);
+    await mount(<MusicManager />, {
+      hooksConfig: {
+        baseUrl: "http://localhost:8000",
+      },
+    });
 
     const genreFilter = page.getByTestId("filter-genre");
 
@@ -252,7 +317,7 @@ test.describe("MusicManager", () => {
       },
       {
         name: "by newest",
-        sortOption: "Newest",
+        sortOption: "Date Created",
         sortField: "createdAt" as const,
       },
     ] as const;
@@ -262,7 +327,11 @@ test.describe("MusicManager", () => {
         if (!mockTracks[0] || !mockTracks[1])
           throw new Error("No tracks available");
 
-        await mount(<MusicManager />);
+        await mount(<MusicManager />, {
+          hooksConfig: {
+            baseUrl: "http://localhost:8000",
+          },
+        });
 
         const sortSelect = page.getByTestId("sort-select");
         const sortOrderSelect = page.getByTestId("sort-order-select");
@@ -286,7 +355,11 @@ test.describe("MusicManager", () => {
     if (!mockTracks[0] || !mockTracks[1])
       throw new Error("No tracks available");
 
-    await mount(<MusicManager />);
+    await mount(<MusicManager />, {
+      hooksConfig: {
+        baseUrl: "http://localhost:8000",
+      },
+    });
 
     const searchInput = page.getByTestId("search-input");
     const genreFilter = page.getByTestId("filter-genre");
@@ -301,7 +374,7 @@ test.describe("MusicManager", () => {
 
     // apply genre filter
     await genreFilter.click();
-    const testGenre = mockTracks[0].genre;
+    const testGenre = mockTracks[0].genres[0];
     if (!testGenre) throw new Error("No genre available");
     await page.getByRole("option", { name: testGenre }).click();
     filteredTracks = filterTracksByGenre(filteredTracks, testGenre);
@@ -326,21 +399,29 @@ test.describe("MusicManager", () => {
     await genreFilter.click();
     await page.getByRole("option", { name: "All Genres" }).click();
     await sortSelect.click();
-    await page.getByRole("option", { name: "Newest" }).click();
+    await page.getByRole("option", { name: "Date Created" }).click();
     await expectTracksVisible(page, mockTracks);
   });
 
-  test("should handle empty states and no results", async ({ mount, page }) => {
-    // Override the default route for this test
-    await page.route("**/api/tracks*", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(mockEmptyResponse),
-      });
+  test("should handle empty states and no results", async ({
+    mount,
+    page,
+    context,
+  }) => {
+    // Override the default mock for this test
+    const mock = getMockRouter(context);
+
+    await mock.service(TracksService, {
+      getTracks() {
+        return mockEmptyResponse;
+      },
     });
 
-    await mount(<MusicManager />);
+    await mount(<MusicManager />, {
+      hooksConfig: {
+        baseUrl: "http://localhost:8000",
+      },
+    });
 
     // should still show UI elements even with no data
     await expect(page.getByTestId("search-input")).toBeVisible();
@@ -355,7 +436,11 @@ test.describe("MusicManager", () => {
     mount,
     page,
   }) => {
-    await mount(<MusicManager />);
+    await mount(<MusicManager />, {
+      hooksConfig: {
+        baseUrl: "http://localhost:8000",
+      },
+    });
 
     // test create button functionality
     const createButton = page.getByTestId("create-track-button");
@@ -366,23 +451,31 @@ test.describe("MusicManager", () => {
     await expect(page.getByRole("dialog")).toBeVisible();
   });
 
-  test("should handle API errors gracefully", async ({ mount, page }) => {
-    await page.route("**/api/genres", async (route) => {
-      await route.fulfill({
-        status: 500,
-        contentType: "application/json",
-        body: JSON.stringify({ error: "Server Error" }),
-      });
-    });
-    await page.route("**/api/tracks*", async (route) => {
-      await route.fulfill({
-        status: 500,
-        contentType: "application/json",
-        body: JSON.stringify({ error: "Server Error" }),
-      });
+  test("should handle API errors gracefully", async ({
+    mount,
+    page,
+    context,
+  }) => {
+    // Override the default mock for this test to simulate errors
+    const mock = getMockRouter(context);
+
+    await mock.service(GenresService, {
+      getGenres() {
+        throw new Error("Server Error");
+      },
     });
 
-    await mount(<MusicManager />);
+    await mock.service(TracksService, {
+      getTracks() {
+        throw new Error("Server Error");
+      },
+    });
+
+    await mount(<MusicManager />, {
+      hooksConfig: {
+        baseUrl: "http://localhost:8000",
+      },
+    });
 
     // UI should still be functional even with API errors
     await expect(page.getByTestId("search-input")).toBeVisible();

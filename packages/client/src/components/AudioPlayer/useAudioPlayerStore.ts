@@ -1,14 +1,13 @@
+import { type Track } from "@music-app/proto/tracks";
 import { create } from "zustand";
-
-import { type TrackWithId } from "@/lib/api/tracks";
 
 type ToggleFn = (() => void) | null;
 
 interface AudioPlayerState {
-  track: TrackWithId | null;
+  track: Track | null;
   isPlaying: boolean;
   _toggleFn: ToggleFn;
-  setTrack: (track: TrackWithId | null) => void;
+  setTrack: (track: Track | null) => void;
   setIsPlaying: (isPlaying: boolean) => void;
   close: () => void;
   setTogglePlayPauseFn: (fn: ToggleFn) => void;

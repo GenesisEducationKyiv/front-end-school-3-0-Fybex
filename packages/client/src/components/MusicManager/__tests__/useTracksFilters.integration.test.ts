@@ -1,4 +1,10 @@
 import { faker } from "@faker-js/faker";
+import {
+  SortField,
+  SortOrder,
+  type create,
+  type DeleteTracksRequestSchema,
+} from "@music-app/proto";
 import { act, renderHook } from "@testing-library/react";
 import {
   afterEach,
@@ -20,26 +26,36 @@ import {
   DEFAULT_SEARCH_TERM,
   DEFAULT_SORT_FIELD,
   DEFAULT_SORT_ORDER,
+  ORDER_PARAM_VALUES,
   PAGE_SIZES,
+  SORT_PARAM_VALUES,
   type FilterState,
 } from "../filter.config";
 import { useTrackSelection } from "../useTrackSelection";
 import { useTracksFilters } from "../useTracksFilters";
 
-const createTestData = () => ({
-  search: faker.lorem.words(faker.number.int({ min: 1, max: 3 })),
-  genre: faker.music.genre(),
-  artist: faker.person.fullName(),
-  page: faker.number.int({ min: 2, max: 10 }),
-  limit: faker.helpers.arrayElement(
-    PAGE_SIZES.filter((size) => size !== DEFAULT_PAGE_SIZE)
-  ),
-  sort: faker.helpers.arrayElement(["title", "artist", "album", "createdAt"]),
-  order: faker.helpers.arrayElement(["asc", "desc"]),
-  trackIds: Array.from({ length: faker.number.int({ min: 2, max: 5 }) }, () =>
-    faker.string.uuid()
-  ),
-});
+const createTestData = () => {
+  const nonDefaultSorts = Object.values(SortField).filter(
+    (v) => v !== DEFAULT_SORT_FIELD && typeof v === "number"
+  ) as SortField[];
+  const nonDefaultOrders = Object.values(SortOrder).filter(
+    (v) => v !== DEFAULT_SORT_ORDER && typeof v === "number"
+  ) as SortOrder[];
+  return {
+    search: faker.lorem.words(faker.number.int({ min: 1, max: 3 })),
+    genre: faker.music.genre(),
+    artist: faker.person.fullName(),
+    page: faker.number.int({ min: 2, max: 10 }),
+    limit: faker.helpers.arrayElement(
+      PAGE_SIZES.filter((size) => size !== DEFAULT_PAGE_SIZE)
+    ),
+    sort: faker.helpers.arrayElement(nonDefaultSorts),
+    order: faker.helpers.arrayElement(nonDefaultOrders),
+    trackIds: Array.from({ length: faker.number.int({ min: 2, max: 5 }) }, () =>
+      faker.string.uuid()
+    ),
+  };
+};
 
 vi.mock("@/lib/api/tracks");
 vi.mock("@/hooks/useDebounce", () => ({
@@ -82,7 +98,9 @@ const expectURLParams = (expectedParams: URLSearchParams) => {
 describe("useTracksFilters", () => {
   let mockDeleteMutate: Mock<
     (
-      ids: string[],
+      deleteRequest: ReturnType<
+        typeof create<typeof DeleteTracksRequestSchema>
+      >,
       options: {
         onSuccess: (result: { success: string[]; failed: string[] }) => void;
         onError: (error: Error) => void;
@@ -150,7 +168,18 @@ describe("useTracksFilters", () => {
           typeof createTestData
         >)[]) {
           if (key !== "trackIds") {
-            setIfNotDefault(key, testData[key].toString());
+            const value = testData[key];
+            if (key === "sort") {
+              const mapped =
+                SORT_PARAM_VALUES[value as keyof typeof SORT_PARAM_VALUES];
+              setIfNotDefault(key, mapped);
+            } else if (key === "order") {
+              const mapped =
+                ORDER_PARAM_VALUES[value as keyof typeof ORDER_PARAM_VALUES];
+              setIfNotDefault(key, mapped);
+            } else {
+              setIfNotDefault(key, value.toString());
+            }
           }
         }
         return params;
@@ -189,8 +218,8 @@ describe("useTracksFilters", () => {
     {
       name: "only sorting with non-default order",
       setters: (filters: ReturnType<typeof useTracksFilters>) => {
-        filters.setSort("title");
-        filters.setOrder("asc");
+        filters.setSort(SortField.TITLE);
+        filters.setOrder(SortOrder.ASC);
       },
       expectedParams: () =>
         new URLSearchParams({
@@ -246,8 +275,8 @@ describe("useTracksFilters", () => {
   it("should handle complete user workflow: filter -> select -> delete", () => {
     const { filters, selection } = setup();
     const testData = createTestData();
-    mockDeleteMutate.mockImplementation((ids, options) => {
-      options.onSuccess({ success: ids, failed: [] });
+    mockDeleteMutate.mockImplementation((deleteRequest, options) => {
+      options.onSuccess({ success: deleteRequest.ids, failed: [] });
     });
 
     act(() => {
@@ -264,7 +293,9 @@ describe("useTracksFilters", () => {
     expect(filters.current.search).toBe(testData.search);
     expect(filters.current.genre).toBe(testData.genre);
     expect(mockDeleteMutate).toHaveBeenCalledWith(
-      testData.trackIds,
+      expect.objectContaining({
+        ids: testData.trackIds,
+      }),
       expect.objectContaining({
         onSuccess: expect.any(Function) as unknown,
         onError: expect.any(Function) as unknown,
@@ -294,7 +325,7 @@ describe("useTracksFilters", () => {
     const { selection } = setup();
     const { trackIds: trackIdsToDelete } = createTestData();
 
-    mockDeleteMutate.mockImplementation((_ids, opts) => {
+    mockDeleteMutate.mockImplementation((_deleteRequest, opts) => {
       opts.onError(new Error());
     });
 
@@ -307,7 +338,9 @@ describe("useTracksFilters", () => {
 
     expect(selection.current.selectedTrackIds).toEqual(trackIdsToDelete);
     expect(mockDeleteMutate).toHaveBeenCalledWith(
-      trackIdsToDelete,
+      expect.objectContaining({
+        ids: trackIdsToDelete,
+      }),
       expect.objectContaining({
         onSuccess: expect.any(Function) as unknown,
         onError: expect.any(Function) as unknown,

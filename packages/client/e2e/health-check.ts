@@ -1,24 +1,21 @@
-interface HealthResponse {
-  status: string;
-}
+import { createClient } from "@connectrpc/connect";
+import { createConnectTransport } from "@connectrpc/connect-web";
+import { HealthService } from "@music-app/proto";
 
 export async function checkBackendHealth(): Promise<void> {
   const API_BASE_URL = process.env.VITE_API_URL ?? "http://localhost:8000";
-  const healthUrl = `${API_BASE_URL}/health`;
+
+  const transport = createConnectTransport({
+    baseUrl: API_BASE_URL,
+  });
+
+  const client = createClient(HealthService, transport);
 
   try {
-    const response = await fetch(healthUrl);
+    const response = await client.healthCheck({});
 
-    if (!response.ok) {
-      throw new Error(
-        `HTTP ${response.status.toString()}: ${response.statusText}`
-      );
-    }
-
-    const data = (await response.json()) as HealthResponse;
-
-    if (data.status !== "ok") {
-      throw new Error(`Backend health check failed: ${data.status}`);
+    if (response.status !== "OK") {
+      throw new Error(`Backend health check failed: ${response.status}`);
     }
   } catch (error) {
     console.error("Backend health check failed:", error);

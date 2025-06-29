@@ -1,20 +1,26 @@
-import {
-  useQuery,
-  type QueryKey,
-  type UseQueryOptions,
-  type UseQueryResult,
-} from "@tanstack/react-query";
+import type {
+  DescMessage,
+  DescMethodUnary,
+  MessageInitShape,
+  MessageShape,
+} from "@bufbuild/protobuf";
+import type { ConnectError } from "@connectrpc/connect";
+import { useQuery, type UseQueryOptions } from "@connectrpc/connect-query";
+import type { SkipToken } from "@connectrpc/connect-query-core";
+import type { UseQueryResult } from "@tanstack/react-query";
 
 export function useApiQuery<
-  TQueryFnData = unknown,
-  TError = Error,
-  TData = TQueryFnData,
-  TQueryKey extends QueryKey = QueryKey
+  I extends DescMessage,
+  O extends DescMessage,
+  SelectOutData = MessageShape<O>
 >(
-  options: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>
-): UseQueryResult<TData, TError> {
-  return useQuery<TQueryFnData, TError, TData, TQueryKey>({
+  schema: DescMethodUnary<I, O>,
+  input?: SkipToken | MessageInitShape<I>,
+  { transport, ...queryOptions }: UseQueryOptions<O, SelectOutData> = {}
+): UseQueryResult<SelectOutData, ConnectError> {
+  return useQuery<I, O, SelectOutData>(schema, input, {
     throwOnError: true,
-    ...options,
+    ...(transport && { transport }),
+    ...queryOptions,
   });
 }

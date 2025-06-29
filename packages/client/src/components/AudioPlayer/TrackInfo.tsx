@@ -1,15 +1,16 @@
+import { type Track } from "@music-app/proto/tracks";
+
 import { TrackCover } from "@/components/ui/TrackCover";
-import { type TrackWithId } from "@/lib/api/tracks";
 
 interface TrackInfoProps {
-  track: TrackWithId;
+  track: Track;
 }
 
 export default function TrackInfo({ track }: TrackInfoProps) {
   return (
     <div className="flex items-center gap-3 flex-shrink-0 min-w-0 w-1/4 max-w-xs">
       <TrackCover
-        alt={track.title ?? "Track cover"}
+        alt={track.title}
         className="h-12 w-12 flex-shrink-0 shadow"
         iconSize={24}
         src={track.coverImage ?? null}

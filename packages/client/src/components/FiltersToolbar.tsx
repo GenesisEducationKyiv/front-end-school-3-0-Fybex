@@ -1,3 +1,5 @@
+import type { SortField, SortOrder } from "@music-app/proto/tracks";
+
 import { Input } from "@/components/ui/Input";
 import {
   Select,
@@ -6,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
-import type { SortField, SortOrder } from "@/lib/api/tracks";
 
 const ALL_GENRES = "All Genres";
 const NO_GENRES = "No genres found";
@@ -68,25 +69,35 @@ export default function FiltersToolbar({
           ))}
         </SelectContent>
       </Select>
-      <Select value={sortBy} onValueChange={onSortChange}>
+      <Select
+        value={sortBy.toString()}
+        onValueChange={(value) => {
+          onSortChange(Number(value) as SortField);
+        }}
+      >
         <SelectTrigger className="w-[180px]" data-testid="sort-select">
           <SelectValue placeholder="Sort by..." />
         </SelectTrigger>
         <SelectContent>
           {sortOptions.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
+            <SelectItem key={option.value} value={option.value.toString()}>
               {option.label}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-      <Select value={sortOrder} onValueChange={onSortOrderChange}>
+      <Select
+        value={sortOrder.toString()}
+        onValueChange={(value) => {
+          onSortOrderChange(Number(value) as SortOrder);
+        }}
+      >
         <SelectTrigger className="w-[150px]" data-testid="sort-order-select">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
           {sortOrderOptions.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
+            <SelectItem key={option.value} value={option.value.toString()}>
               {option.label}
             </SelectItem>
           ))}

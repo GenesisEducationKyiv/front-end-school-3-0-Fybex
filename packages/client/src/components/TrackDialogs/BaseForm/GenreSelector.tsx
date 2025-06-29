@@ -17,13 +17,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/Popover";
-import { type Genre, type Genres } from "@/lib/api/genres";
-import { type BaseTrackFormData } from "@/lib/api/tracks";
 import { cn } from "@/lib/utils";
 
+import { type TrackFormData } from "../types";
+
 interface GenreSelectorProps {
-  availableGenres: Genres;
-  form: UseFormReturn<BaseTrackFormData>;
+  availableGenres: string[];
+  form: UseFormReturn<TrackFormData>;
 }
 
 export default function GenreSelector({
@@ -33,7 +33,7 @@ export default function GenreSelector({
   const [popoverOpen, setPopoverOpen] = useState(false);
   const selectedGenres = form.watch("genres");
 
-  const handleGenreSelect = (genre: Genre) => {
+  const handleGenreSelect = (genre: string) => {
     const currentGenres = form.getValues("genres");
     const newGenres = currentGenres.includes(genre)
       ? currentGenres.filter((g) => g !== genre)
