@@ -1,292 +1,432 @@
+import { create } from '@bufbuild/protobuf';
+import { type Timestamp, TimestampSchema } from '@bufbuild/protobuf/wkt';
+import { Code, ConnectError } from '@connectrpc/connect';
+
 import {
-  createTrack, 
-  deleteTrack, 
-  getTrackById, 
-  getTrackBySlug, 
-  getTracks, 
-  updateTrack,
+  type CreateTrackRequest,
+  type CreateTrackResponse,
+  CreateTrackResponseSchema,
+  type DeleteFileRequest,
+  type DeleteFileResponse,
+  DeleteFileResponseSchema,
+  type DeleteTrackRequest,
+  type DeleteTrackResponse,
+  DeleteTrackResponseSchema,
+  type DeleteTracksRequest,
+  type DeleteTracksResponse,
+  DeleteTracksResponseSchema,
+  type GetTrackBySlugRequest,
+  type GetTrackBySlugResponse,
+  GetTrackBySlugResponseSchema,
+  type GetTracksRequest,
+  type GetTracksResponse,
+  GetTracksResponseSchema,
+  PaginationMetaSchema,
+  type Track as ProtoTrack,
+  TrackSchema as ProtoTrackSchema,
+  SortField,
+  SortOrder,
+  type UpdateTrackRequest,
+  type UpdateTrackResponse,
+  UpdateTrackResponseSchema,
+  type UploadFileRequest,
+  type UploadFileResponse,
+  UploadFileResponseSchema,
+} from '../generated/music/v1/music_pb';
+import { type Track as DbTrack } from '../types';
+import {
+  createTrack,
+  deleteAudioFile,
   deleteMultipleTracks,
+  deleteTrack,
+  getTrackById,
+  getTrackBySlug,
+  getTracks,
   saveAudioFile,
-  deleteAudioFile
+  updateTrack,
 } from '../utils/db';
 import { createSlug } from '../utils/slug';
-import { 
-  Track,
-  CreateTrackDto, 
-  UpdateTrackDto,
-  RouteHandler,
-  GetTrackParams,
-  GetTrackByIdParams,
-  UpdateTrackParams,
-  CreateTrackRequest,
-  ListTracksQuery,
-  DeleteTracksRequest,
-  FileUploadParams,
-  PaginatedResponse,
-  BatchDeleteResponse
-} from '../types';
+
+// Helper function to convert Date to Timestamp
+function dateToTimestamp(date: Date): Timestamp {
+  return create(TimestampSchema, {
+    seconds: BigInt(Math.floor(date.getTime() / 1000)),
+    nanos: (date.getTime() % 1000) * 1000000,
+  });
+}
+
+// Helper function to convert database track to protobuf Track
+function dbTrackToProto(dbTrack: DbTrack): ProtoTrack {
+  return create(ProtoTrackSchema, {
+    id: dbTrack.id,
+    title: dbTrack.title,
+    artist: dbTrack.artist,
+    album: dbTrack.album ?? '',
+    genres: dbTrack.genres,
+    slug: dbTrack.slug,
+    coverImage: dbTrack.coverImage ?? '',
+    audioFile: dbTrack.audioFile ?? '',
+    createdAt: dateToTimestamp(new Date(dbTrack.createdAt)),
+    updatedAt: dateToTimestamp(new Date(dbTrack.updatedAt)),
+  });
+}
+
+function sortFieldToString(
+  sortField: SortField | undefined,
+): 'title' | 'artist' | 'album' | 'createdAt' | undefined {
+  if (sortField === undefined) return undefined;
+  switch (sortField) {
+    case SortField.TITLE:
+      return 'title';
+    case SortField.ARTIST:
+      return 'artist';
+    case SortField.ALBUM:
+      return 'album';
+    case SortField.CREATED_AT:
+      return 'createdAt';
+    default:
+      return undefined;
+  }
+}
+
+function sortOrderToString(
+  sortOrder: SortOrder | undefined,
+): 'asc' | 'desc' | undefined {
+  if (sortOrder === undefined) return undefined;
+  switch (sortOrder) {
+    case SortOrder.ASC:
+      return 'asc';
+    case SortOrder.DESC:
+      return 'desc';
+    default:
+      return undefined;
+  }
+}
 
 /**
  * Get all tracks with pagination, sorting, and filtering
  */
-export const getAllTracks: RouteHandler<ListTracksQuery> = async (
-  request,
-  reply
-) => {
+export async function getAllTracks(
+  request: GetTracksRequest,
+): Promise<GetTracksResponse> {
   try {
-    const { tracks, total } = await getTracks(request.query);
-    
-    const page = request.query.page || 1;
-    const limit = request.query.limit || 10;
-    
-    const response: PaginatedResponse<Track> = {
-      data: tracks,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit)
-      }
+    const query = {
+      page: request.page ?? 1,
+      limit: request.limit ?? 10,
+      sort: sortFieldToString(request.sort),
+      order: sortOrderToString(request.order),
+      search: request.search,
+      genre: request.genre,
+      artist: request.artist,
     };
-    
-    return reply.code(200).send(response);
+
+    const { tracks, total } = await getTracks(query);
+
+    const protoTracks = tracks.map(dbTrackToProto);
+
+    const meta = create(PaginationMetaSchema, {
+      total: total,
+      page: query.page,
+      limit: query.limit,
+      totalPages: Math.ceil(total / query.limit),
+    });
+
+    return create(GetTracksResponseSchema, {
+      tracks: protoTracks,
+      meta: meta,
+    });
   } catch (error) {
-    request.log.error(error);
-    return reply.code(500).send({ error: 'Internal Server Error' });
+    console.error('Error getting tracks:', error);
+    throw new ConnectError('Failed to get tracks', Code.Internal);
   }
-};
+}
 
 /**
  * Get a track by its slug
  */
-export const getTrack: RouteHandler<GetTrackParams> = async (
-  request,
-  reply
-) => {
+export async function getTrack(
+  request: GetTrackBySlugRequest,
+): Promise<GetTrackBySlugResponse> {
   try {
-    const { slug } = request.params;
-    const track = await getTrackBySlug(slug);
-    
+    const track = await getTrackBySlug(request.slug);
+
     if (!track) {
-      return reply.code(404).send({ error: 'Track not found' });
+      throw new ConnectError('Track not found', Code.NotFound);
     }
-    
-    return reply.code(200).send(track);
+
+    return create(GetTrackBySlugResponseSchema, {
+      track: dbTrackToProto(track),
+    });
   } catch (error) {
-    request.log.error(error);
-    return reply.code(500).send({ error: 'Internal Server Error' });
+    if (error instanceof ConnectError) {
+      throw error;
+    }
+    console.error('Error getting track:', error);
+    throw new ConnectError('Failed to get track', Code.Internal);
   }
-};
+}
 
 /**
  * Create a new track
  */
-export const addTrack: RouteHandler<CreateTrackRequest> = async (
-  request,
-  reply
-) => {
+export async function addTrack(
+  request: CreateTrackRequest,
+): Promise<CreateTrackResponse> {
   try {
-    const { title, artist, album = "", genres = [], coverImage = "" } = request.body;
-    
+    const { title, artist, album = '', genres = [], coverImage = '' } = request;
+
     if (!title || !artist) {
-      return reply.code(400).send({ error: 'Title and artist are required' });
+      throw new ConnectError(
+        'Title and artist are required',
+        Code.InvalidArgument,
+      );
     }
-    
-    if (!genres || !Array.isArray(genres)) {
-      return reply.code(400).send({ error: 'Genres must be an array' });
-    }
-    
+
     const slug = createSlug(title);
-    
+
     const existingTrack = await getTrackBySlug(slug);
     if (existingTrack) {
-      return reply.code(409).send({ error: 'A track with this title already exists' });
+      throw new ConnectError(
+        'A track with this title already exists',
+        Code.AlreadyExists,
+      );
     }
-    
+
     const newTrack = await createTrack({
       title,
       artist,
       album,
-      genres,
+      genres: genres,
       coverImage,
-      slug
+      slug,
     });
-    
-    return reply.code(201).send(newTrack);
+
+    return create(CreateTrackResponseSchema, {
+      track: dbTrackToProto(newTrack),
+    });
   } catch (error) {
-    request.log.error(error);
-    return reply.code(500).send({ error: 'Internal Server Error' });
+    if (error instanceof ConnectError) {
+      throw error;
+    }
+    console.error('Error creating track:', error);
+    throw new ConnectError('Failed to create track', Code.Internal);
   }
-};
+}
 
 /**
  * Update a track by ID
  */
-export const updateTrackById: RouteHandler<UpdateTrackParams> = async (
-  request,
-  reply
-) => {
+export async function updateTrackById(
+  request: UpdateTrackRequest,
+): Promise<UpdateTrackResponse> {
   try {
-    const { id } = request.params;
-    const { title, artist, album, genres, coverImage } = request.body;
-    
+    const { id, title, artist, album, genres, coverImage } = request;
+
     const existingTrack = await getTrackById(id);
     if (!existingTrack) {
-      return reply.code(404).send({ error: 'Track not found' });
+      throw new ConnectError('Track not found', Code.NotFound);
     }
-    
-    // If title is being updated, update the slug as well
-    let updates: Partial<UpdateTrackDto & { slug?: string }> = { ...request.body };
-    
+
+    // Only update fields that are provided (not empty)
+    const updates: Partial<DbTrack> = {};
+
+    if (title) updates.title = title;
+    if (artist) updates.artist = artist;
+    if (album) updates.album = album;
+    if (genres.length > 0) updates.genres = genres;
+    if (coverImage) updates.coverImage = coverImage;
+
     if (title && title !== existingTrack.title) {
       const newSlug = createSlug(title);
-      
+
       // Check if the new slug already exists on a different track
       const trackWithSameSlug = await getTrackBySlug(newSlug);
       if (trackWithSameSlug && trackWithSameSlug.id !== id) {
-        return reply.code(409).send({ error: 'A track with this title already exists' });
+        throw new ConnectError(
+          'A track with this title already exists',
+          Code.AlreadyExists,
+        );
       }
-      
+
       updates.slug = newSlug;
     }
-    
+
     const updatedTrack = await updateTrack(id, updates);
-    
-    return reply.code(200).send(updatedTrack);
+
+    if (!updatedTrack) {
+      throw new ConnectError(
+        'Failed to update track, track not found after update.',
+        Code.Internal,
+      );
+    }
+
+    return create(UpdateTrackResponseSchema, {
+      track: dbTrackToProto(updatedTrack),
+    });
   } catch (error) {
-    request.log.error(error);
-    return reply.code(500).send({ error: 'Internal Server Error' });
+    if (error instanceof ConnectError) {
+      throw error;
+    }
+    console.error('Error updating track:', error);
+    throw new ConnectError('Failed to update track', Code.Internal);
   }
-};
+}
 
 /**
  * Delete a track by ID
  */
-export const removeTrack: RouteHandler<GetTrackByIdParams> = async (
-  request,
-  reply
-) => {
+export async function removeTrack(
+  request: DeleteTrackRequest,
+): Promise<DeleteTrackResponse> {
   try {
-    const { id } = request.params;
-    
-    const success = await deleteTrack(id);
-    
+    const success = await deleteTrack(request.id);
+
     if (!success) {
-      return reply.code(404).send({ error: 'Track not found' });
+      throw new ConnectError('Track not found', Code.NotFound);
     }
-    
-    return reply.code(204).send();
+
+    return create(DeleteTrackResponseSchema, {
+      success: true,
+    });
   } catch (error) {
-    request.log.error(error);
-    return reply.code(500).send({ error: 'Internal Server Error' });
+    if (error instanceof ConnectError) {
+      throw error;
+    }
+    console.error('Error deleting track:', error);
+    throw new ConnectError('Failed to delete track', Code.Internal);
   }
-};
+}
 
 /**
  * Delete multiple tracks
  */
-export const removeTracks: RouteHandler<DeleteTracksRequest> = async (
-  request,
-  reply
-) => {
+export async function removeTracks(
+  request: DeleteTracksRequest,
+): Promise<DeleteTracksResponse> {
   try {
-    const { ids } = request.body;
-    
-    if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      return reply.code(400).send({ error: 'Track IDs are required' });
+    const { ids } = request;
+
+    if (ids.length === 0) {
+      throw new ConnectError('Track IDs are required', Code.InvalidArgument);
     }
-    
-    const results: BatchDeleteResponse = await deleteMultipleTracks(ids);
-    
-    return reply.code(200).send(results);
+
+    const results = await deleteMultipleTracks(ids);
+
+    return create(DeleteTracksResponseSchema, {
+      success: results.success,
+      failed: results.failed,
+    });
   } catch (error) {
-    request.log.error(error);
-    return reply.code(500).send({ error: 'Internal Server Error' });
+    if (error instanceof ConnectError) {
+      throw error;
+    }
+    console.error('Error deleting tracks:', error);
+    throw new ConnectError('Failed to delete tracks', Code.Internal);
   }
-};
+}
 
 /**
- * Upload an audio file for a track
+ * Upload a file for a track
  */
-export const uploadTrackFile: RouteHandler<FileUploadParams> = async (
-  request,
-  reply
-) => {
+export async function uploadTrackFile(
+  request: UploadFileRequest,
+): Promise<UploadFileResponse> {
   try {
-    const { id } = request.params;
-    
-    const existingTrack = await getTrackById(id);
-    if (!existingTrack) {
-      return reply.code(404).send({ error: 'Track not found' });
+    const { trackId, filename, content, contentType } = request;
+
+    if (!trackId || !filename) {
+      throw new ConnectError(
+        'Track ID, filename, and content are required',
+        Code.InvalidArgument,
+      );
     }
-    
-    const data = await request.file();
-    
-    if (!data) {
-      return reply.code(400).send({ error: 'No file uploaded' });
-    }
-    
+
     // Validate file type
-    const allowedMimeTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/x-wav'];
-    if (!allowedMimeTypes.includes(data.mimetype)) {
-      return reply.code(400).send({ 
-        error: 'Invalid file type. Only MP3 and WAV files are allowed.' 
-      });
+    const allowedTypes = [
+      'audio/mpeg',
+      'audio/wav',
+      'audio/mp3',
+      'image/jpeg',
+      'image/png',
+      'image/jpg',
+    ];
+    if (!allowedTypes.includes(contentType)) {
+      throw new ConnectError('Invalid file type', Code.InvalidArgument);
     }
-    
-    // Get file buffer
-    const buffer = await data.toBuffer();
-    
-    // Check file size (10MB limit)
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (buffer.length > maxSize) {
-      return reply.code(400).send({ 
-        error: 'File is too large. Maximum size is 10MB.' 
-      });
+
+    // Validate file size (10MB limit)
+    const maxSize = 10 * 1024 * 1024;
+    if (content.length > maxSize) {
+      throw new ConnectError('File size exceeds limit', Code.InvalidArgument);
     }
-    
-    // Save file and update track
-    const fileName = await saveAudioFile(id, data.filename, buffer);
-    
-    const updatedTrack = await updateTrack(id, { audioFile: fileName });
-    
-    return reply.code(200).send(updatedTrack);
+
+    const track = await getTrackById(trackId);
+    if (!track) {
+      throw new ConnectError('Track not found', Code.NotFound);
+    }
+
+    await saveAudioFile(trackId, filename, Buffer.from(content));
+
+    // Get updated track
+    const updatedTrack = await getTrackById(trackId);
+
+    if (!updatedTrack) {
+      throw new ConnectError(
+        'Failed to get updated track after file upload.',
+        Code.Internal,
+      );
+    }
+
+    return create(UploadFileResponseSchema, {
+      track: dbTrackToProto(updatedTrack),
+    });
   } catch (error) {
-    request.log.error(error);
-    return reply.code(500).send({ error: 'Internal Server Error' });
+    if (error instanceof ConnectError) {
+      throw error;
+    }
+    console.error('Error uploading file:', error);
+    throw new ConnectError('Failed to upload file', Code.Internal);
   }
-};
+}
 
 /**
- * Delete an audio file from a track
+ * Delete a file for a track
  */
-export const deleteTrackFile: RouteHandler<FileUploadParams> = async (
-  request,
-  reply
-) => {
+export async function deleteTrackFile(
+  request: DeleteFileRequest,
+): Promise<DeleteFileResponse> {
   try {
-    const { id } = request.params;
-    
-    const existingTrack = await getTrackById(id);
-    if (!existingTrack) {
-      return reply.code(404).send({ error: 'Track not found' });
+    const { trackId } = request;
+
+    if (!trackId) {
+      throw new ConnectError('Track ID is required', Code.InvalidArgument);
     }
-    
-    if (!existingTrack.audioFile) {
-      return reply.code(404).send({ error: 'Track has no audio file' });
+
+    const track = await getTrackById(trackId);
+    if (!track) {
+      throw new ConnectError('Track not found', Code.NotFound);
     }
-    
-    const success = await deleteAudioFile(id);
-    
-    if (!success) {
-      return reply.code(500).send({ error: 'Failed to delete audio file' });
+
+    await deleteAudioFile(trackId);
+
+    // Get updated track
+    const updatedTrack = await getTrackById(trackId);
+
+    if (!updatedTrack) {
+      throw new ConnectError(
+        'Failed to get updated track after file deletion.',
+        Code.Internal,
+      );
     }
-    
-    const updatedTrack = await getTrackById(id);
-    
-    return reply.code(200).send(updatedTrack);
+
+    return create(DeleteFileResponseSchema, {
+      track: dbTrackToProto(updatedTrack),
+    });
   } catch (error) {
-    request.log.error(error);
-    return reply.code(500).send({ error: 'Internal Server Error' });
+    if (error instanceof ConnectError) {
+      throw error;
+    }
+    console.error('Error deleting file:', error);
+    throw new ConnectError('Failed to delete file', Code.Internal);
   }
-};
+}

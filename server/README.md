@@ -24,7 +24,3 @@ If you don't have proper version of NodeJS installed, you can download using fro
     ```bash
     npm run dev
     ```
-
-## API Documentation
-
-API documentation is available at <http://localhost:8000/documentation>

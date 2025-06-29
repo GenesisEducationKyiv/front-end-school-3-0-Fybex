@@ -1,5 +1,8 @@
-import { FastifyReply, FastifyRequest, RequestGenericInterface } from 'fastify';
-import { MultipartFile } from '@fastify/multipart';
+import {
+  type FastifyReply,
+  type FastifyRequest,
+  type RequestGenericInterface,
+} from 'fastify';
 
 /**
  * Core domain entities
@@ -105,7 +108,7 @@ export interface PaginatedResponse<T> {
     limit: number;
     /** Total number of pages */
     totalPages: number;
-  }
+  };
 }
 
 /**
@@ -125,13 +128,13 @@ export interface BatchDeleteResponse {
 export interface GetTrackParams extends RequestGenericInterface {
   Params: {
     slug: string;
-  }
+  };
 }
 
 export interface GetTrackByIdParams extends RequestGenericInterface {
   Params: {
     id: string;
-  }
+  };
 }
 
 export interface UpdateTrackParams extends RequestGenericInterface {
@@ -152,18 +155,19 @@ export interface ListTracksQuery extends RequestGenericInterface {
 export interface DeleteTracksRequest extends RequestGenericInterface {
   Body: {
     ids: string[];
-  }
+  };
 }
 
 export interface FileUploadParams extends RequestGenericInterface {
   Params: {
     id: string;
-  }
+  };
 }
 
 /**
  * Handler function types
  */
 
-export type RouteHandler<T extends RequestGenericInterface = RequestGenericInterface> = 
-  (request: FastifyRequest<T>, reply: FastifyReply) => Promise<FastifyReply | void>;
+export type RouteHandler<
+  T extends RequestGenericInterface = RequestGenericInterface,
+> = (request: FastifyRequest<T>, reply: FastifyReply) => Promise<FastifyReply>;

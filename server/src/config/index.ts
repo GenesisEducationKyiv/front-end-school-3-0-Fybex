@@ -1,24 +1,42 @@
-import { z } from 'zod';
+import fs from 'fs';
+import path from 'path';
+
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
-import path from 'path';
-import fs from 'fs';
+import { z } from 'zod';
 
-// Determine which .env file to load based on NODE_ENV
-const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
+const isTest = process.env.NODE_ENV === 'test';
 
-// Check if the env file exists
-const envPath = path.resolve(process.cwd(), envFile);
-const fallbackPath = path.resolve(process.cwd(), '.env');
+// For tests, create a unique directory for each worker to run in parallel safely.
+// For other environments, load from .env files.
+if (isTest) {
+  const testWorkerId = process.env.VITEST_WORKER_ID ?? '1';
+  const testDataRoot = path.join('./test-data', `worker-${testWorkerId}`);
 
-// Load environment variables from .env file
-const env = fs.existsSync(envPath)
-  ? dotenv.config({ path: envPath })
-  : fs.existsSync(fallbackPath)
-  ? dotenv.config({ path: fallbackPath })
-  : dotenv.config();
+  process.env.DATA_DIR = testDataRoot;
+  process.env.TRACKS_DIR = path.join(testDataRoot, 'tracks');
+  process.env.UPLOADS_DIR = path.join(testDataRoot, 'uploads');
+  process.env.GENRES_FILE = path.join(testDataRoot, 'genres.json');
+  process.env.LOG_LEVEL = 'silent';
+} else {
+  // Determine which .env file to load based on NODE_ENV
+  const envFile = process.env.NODE_ENV
+    ? `.env.${process.env.NODE_ENV}`
+    : '.env';
+  const envPath = path.resolve(process.cwd(), envFile);
 
-dotenvExpand.expand(env);
+  if (fs.existsSync(envPath)) {
+    const env = dotenv.config({ path: envPath });
+    dotenvExpand.expand(env);
+  } else {
+    // Fallback to .env if specific one doesn't exist
+    const fallbackPath = path.resolve(process.cwd(), '.env');
+    if (fs.existsSync(fallbackPath)) {
+      const env = dotenv.config({ path: fallbackPath });
+      dotenvExpand.expand(env);
+    }
+  }
+}
 
 /**
  * Define a schema for the environment variables using Zod

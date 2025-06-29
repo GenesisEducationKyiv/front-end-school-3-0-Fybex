@@ -1,252 +1,268 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { setupTestServer } from './helpers/server';
+import { beforeEach, describe, expect, it } from 'vitest';
 
-describe('Tracks Endpoints', () => {
-  const getServer = setupTestServer();
-  let testTrackId: string;
-  const testTrack = {
-    title: 'Test Track',
-    artist: 'Test Artist',
-    album: 'Test Album',
-    genres: ['Rock', 'Pop'],
-    coverImage: 'https://example.com/image.jpg'
-  };
-  
-  describe('POST /api/tracks', () => {
+import { SortField, SortOrder } from '../generated/music/v1/music_pb';
+
+import { resetTestDatabase, setupTestServer } from './helpers/server';
+
+describe('Tracks', () => {
+  const getTestSetup = setupTestServer();
+
+  beforeEach(async () => {
+    await resetTestDatabase();
+  });
+
+  describe('Create Track', () => {
     it('should create a new track', async () => {
-      const response = await getServer().inject({
-        method: 'POST',
-        url: '/api/tracks',
-        payload: testTrack
-      });
-      
-      expect(response.statusCode).toBe(201);
-      
-      const createdTrack = JSON.parse(response.payload);
-      testTrackId = createdTrack.id;
-      
-      expect(createdTrack.title).toBe(testTrack.title);
-      expect(createdTrack.artist).toBe(testTrack.artist);
-      expect(createdTrack.album).toBe(testTrack.album);
-      expect(createdTrack.genres).toEqual(testTrack.genres);
-      expect(createdTrack.slug).toBe('test-track');
-      expect(createdTrack.coverImage).toBe(testTrack.coverImage);
-      expect(createdTrack.id).toBeDefined();
-      expect(createdTrack.createdAt).toBeDefined();
-      expect(createdTrack.updatedAt).toBeDefined();
+      const { client } = getTestSetup();
+      const testTrack = {
+        title: 'Test Track Create',
+        artist: 'Test Artist',
+        album: 'Test Album',
+        genres: ['Rock', 'Pop'],
+        coverImage: 'https://example.com/image.jpg',
+      };
+
+      const response = await client.createTrack(testTrack);
+
+      expect(response.track?.title).toBe(testTrack.title);
+      expect(response.track?.artist).toBe(testTrack.artist);
+      expect(response.track?.album).toBe(testTrack.album);
+      expect(response.track?.genres).toEqual(testTrack.genres);
+      expect(response.track?.slug).toBe('test-track-create');
+      expect(response.track?.coverImage).toBe(testTrack.coverImage);
+      expect(response.track?.id).toBeDefined();
+      expect(response.track?.createdAt).toBeDefined();
+      expect(response.track?.updatedAt).toBeDefined();
     });
-    
-    it('should return 400 when required fields are missing', async () => {
-      const response = await getServer().inject({
-        method: 'POST',
-        url: '/api/tracks',
-        payload: {
-          title: 'Test Track'
+
+    it('should return error when required fields are missing', async () => {
+      const { client } = getTestSetup();
+      await expect(
+        client.createTrack({
+          title: 'Test Track Missing Fields',
           // Missing required fields
-        }
-      });
-      
-      expect(response.statusCode).toBe(400);
+        }),
+      ).rejects.toThrow();
     });
   });
-  
-  describe('GET /api/tracks', () => {
+
+  describe('Get Tracks', () => {
     it('should return a list of tracks with pagination', async () => {
-      const response = await getServer().inject({
-        method: 'GET',
-        url: '/api/tracks?page=1&limit=10'
+      const { client } = getTestSetup();
+      // Create a test track
+      const testTrack = {
+        title: 'Test Track Pagination',
+        artist: 'Test Artist',
+        album: 'Test Album',
+        genres: ['Rock', 'Pop'],
+        coverImage: 'https://example.com/image.jpg',
+      };
+      await client.createTrack(testTrack);
+
+      const response = await client.getTracks({
+        page: 1,
+        limit: 10,
       });
-      
-      expect(response.statusCode).toBe(200);
-      
-      const result = JSON.parse(response.payload);
-      expect(result.data).toBeDefined();
-      expect(Array.isArray(result.data)).toBe(true);
-      expect(result.meta).toBeDefined();
-      expect(result.meta.page).toBe(1);
-      expect(result.meta.limit).toBe(10);
-      expect(result.meta.total).toBeGreaterThanOrEqual(1);
-      expect(result.meta.totalPages).toBeGreaterThanOrEqual(1);
-      
+
+      expect(response.tracks).toBeDefined();
+      expect(Array.isArray(response.tracks)).toBe(true);
+      expect(response.meta).toBeDefined();
+      expect(response.meta?.page).toBe(1);
+      expect(response.meta?.limit).toBe(10);
+      expect(response.meta?.total).toBeGreaterThanOrEqual(1);
+      expect(response.meta?.totalPages).toBeGreaterThanOrEqual(1);
+
       // Verify our test track is in the results
-      const testTrackInResults = result.data.some(
-        (track: any) => track.title === testTrack.title
+      const testTrackInResults = response.tracks.some(
+        (track) => track.title === testTrack.title,
       );
       expect(testTrackInResults).toBe(true);
     });
-    
+
     it('should filter tracks by search term', async () => {
-      const response = await getServer().inject({
-        method: 'GET',
-        url: `/api/tracks?search=${testTrack.title}`
+      const { client } = getTestSetup();
+      const testTrack = {
+        title: 'Test Track Search',
+        artist: 'Test Artist',
+        genres: ['Rock'],
+      };
+      await client.createTrack(testTrack);
+
+      const response = await client.getTracks({
+        page: 1,
+        limit: 10,
+        search: testTrack.title,
       });
-      
-      expect(response.statusCode).toBe(200);
-      
-      const result = JSON.parse(response.payload);
-      expect(result.data.length).toBeGreaterThan(0);
-      expect(result.data[0].title).toBe(testTrack.title);
+
+      expect(response.tracks.length).toBeGreaterThan(0);
+      expect(response.tracks[0].title).toBe(testTrack.title);
     });
-    
+
     it('should sort tracks by title', async () => {
-      const response = await getServer().inject({
-        method: 'GET',
-        url: '/api/tracks?sort=title&order=asc'
+      const { client } = getTestSetup();
+      // Create test tracks for sorting
+      await client.createTrack({
+        title: 'B Track Sort',
+        artist: 'Test Artist',
+        genres: ['Rock'],
       });
-      
-      expect(response.statusCode).toBe(200);
-      
-      const result = JSON.parse(response.payload);
-      expect(result.data.length).toBeGreaterThan(0);
-      
+      await client.createTrack({
+        title: 'A Track Sort',
+        artist: 'Test Artist',
+        genres: ['Rock'],
+      });
+
+      const response = await client.getTracks({
+        sort: SortField.TITLE,
+        order: SortOrder.ASC,
+      });
+
+      expect(response.tracks.length).toBeGreaterThan(0);
+
       // Verify the result is sorted by title
-      const sortedTitles = [...result.data].map(track => track.title).sort();
-      const resultTitles = result.data.map((track: any) => track.title);
+      const sortedTitles = [...response.tracks]
+        .map((track) => track.title)
+        .sort();
+      const resultTitles = response.tracks.map((track) => track.title);
       expect(resultTitles).toEqual(sortedTitles);
     });
   });
-  
-  describe('GET /api/tracks/:slug', () => {
+
+  describe('Get Track by Slug', () => {
     it('should return a track by slug', async () => {
-      const response = await getServer().inject({
-        method: 'GET',
-        url: '/api/tracks/test-track'
-      });
-      
-      expect(response.statusCode).toBe(200);
-      
-      const track = JSON.parse(response.payload);
-      expect(track.title).toBe(testTrack.title);
-      expect(track.artist).toBe(testTrack.artist);
-      expect(track.slug).toBe('test-track');
-    });
-    
-    it('should return 404 for non-existent track', async () => {
-      const response = await getServer().inject({
-        method: 'GET',
-        url: '/api/tracks/non-existent-track'
-      });
-      
-      expect(response.statusCode).toBe(404);
-    });
-  });
-  
-  describe('PUT /api/tracks/:id', () => {
-    it('should update a track', async () => {
-      const updatedData = {
-        title: 'Updated Track',
-        artist: 'Updated Artist',
-        genres: ['Jazz', 'Blues']
+      const { client } = getTestSetup();
+      const testTrack = {
+        title: 'Test Track By Slug',
+        artist: 'Test Artist',
+        album: 'Test Album',
+        genres: ['Rock', 'Pop'],
       };
-      
-      const response = await getServer().inject({
-        method: 'PUT',
-        url: `/api/tracks/${testTrackId}`,
-        payload: updatedData
+      await client.createTrack(testTrack);
+
+      const response = await client.getTrackBySlug({
+        slug: 'test-track-by-slug',
       });
-      
-      expect(response.statusCode).toBe(200);
-      
-      const updatedTrack = JSON.parse(response.payload);
-      expect(updatedTrack.title).toBe(updatedData.title);
-      expect(updatedTrack.artist).toBe(updatedData.artist);
-      expect(updatedTrack.genres).toEqual(updatedData.genres);
-      expect(updatedTrack.slug).toBe('updated-track');
-      expect(updatedTrack.album).toBe(testTrack.album); // This shouldn't change
+
+      expect(response.track?.title).toBe(testTrack.title);
+      expect(response.track?.artist).toBe(testTrack.artist);
+      expect(response.track?.slug).toBe('test-track-by-slug');
     });
-    
-    it('should return 404 for non-existent track', async () => {
-      const response = await getServer().inject({
-        method: 'PUT',
-        url: '/api/tracks/non-existent-id',
-        payload: { title: 'Updated Track' }
-      });
-      
-      expect(response.statusCode).toBe(404);
+
+    it('should return error for non-existent track', async () => {
+      const { client } = getTestSetup();
+      await expect(
+        client.getTrackBySlug({ slug: 'non-existent-track' }),
+      ).rejects.toThrow();
     });
   });
-  
-  describe('DELETE /api/tracks/:id', () => {
+
+  describe('Update Track', () => {
+    it('should update a track', async () => {
+      const { client } = getTestSetup();
+      const testTrack = {
+        title: 'Test Track Update',
+        artist: 'Test Artist',
+        album: 'Test Album',
+        genres: ['Rock', 'Pop'],
+      };
+      const createResponse = await client.createTrack(testTrack);
+      const trackId = createResponse.track?.id;
+
+      const updatedData = {
+        id: trackId,
+        title: 'Updated Track Title',
+        artist: 'Updated Artist',
+        genres: ['Jazz', 'Blues'],
+      };
+
+      const response = await client.updateTrack(updatedData);
+
+      expect(response.track?.title).toBe(updatedData.title);
+      expect(response.track?.artist).toBe(updatedData.artist);
+      expect(response.track?.genres).toEqual(updatedData.genres);
+      expect(response.track?.slug).toBe('updated-track-title');
+      expect(response.track?.album).toBe(testTrack.album); // This shouldn't change
+    });
+
+    it('should return error for non-existent track', async () => {
+      const { client } = getTestSetup();
+      await expect(
+        client.updateTrack({
+          id: 'non-existent-id',
+          title: 'Updated Track',
+          genres: [],
+        }),
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('Delete Track', () => {
     it('should delete a track', async () => {
-      const response = await getServer().inject({
-        method: 'DELETE',
-        url: `/api/tracks/${testTrackId}`
+      const { client } = getTestSetup();
+      const testTrack = {
+        title: 'Test Track Delete',
+        artist: 'Test Artist',
+        genres: ['Rock'],
+      };
+      const createResponse = await client.createTrack(testTrack);
+      const trackId = createResponse.track?.id;
+
+      const response = await client.deleteTrack({
+        id: trackId,
       });
-      
-      expect(response.statusCode).toBe(204);
-      
+
+      expect(response.success).toBe(true);
+
       // Verify the track was deleted
-      const getResponse = await getServer().inject({
-        method: 'GET',
-        url: '/api/tracks/updated-track'
-      });
-      
-      expect(getResponse.statusCode).toBe(404);
+      await expect(
+        client.getTrackBySlug({ slug: 'test-track-delete' }),
+      ).rejects.toThrow();
     });
-    
-    it('should return 404 for non-existent track', async () => {
-      const response = await getServer().inject({
-        method: 'DELETE',
-        url: '/api/tracks/non-existent-id'
-      });
-      
-      expect(response.statusCode).toBe(404);
+
+    it('should return error for non-existent track', async () => {
+      const { client } = getTestSetup();
+      await expect(
+        client.deleteTrack({ id: 'non-existent-id' }),
+      ).rejects.toThrow();
     });
   });
-  
-  describe('POST /api/tracks/delete', () => {
-    let batchTrackIds: string[] = [];
-    
-    beforeAll(async () => {
+
+  describe('Delete Multiple Tracks', () => {
+    it('should delete multiple tracks', async () => {
+      const { client } = getTestSetup();
+      const batchTrackIds: string[] = [];
+
       // Create multiple tracks for batch delete test
       for (let i = 0; i < 3; i++) {
-        const response = await getServer().inject({
-          method: 'POST',
-          url: '/api/tracks',
-          payload: {
-            title: `Batch Track ${i}`,
-            artist: 'Batch Artist',
-            genres: ['Rock']
-          }
+        const response = await client.createTrack({
+          title: `Batch Track Delete ${i.toString()}`,
+          artist: 'Batch Artist',
+          genres: ['Rock'],
         });
-        
-        const track = JSON.parse(response.payload);
-        batchTrackIds.push(track.id);
+
+        batchTrackIds.push(response.track?.id ?? '');
       }
-    });
-    
-    it('should delete multiple tracks', async () => {
-      const response = await getServer().inject({
-        method: 'POST',
-        url: '/api/tracks/delete',
-        payload: { ids: batchTrackIds }
+
+      const response = await client.deleteTracks({
+        ids: batchTrackIds,
       });
-      
-      expect(response.statusCode).toBe(200);
-      
-      const result = JSON.parse(response.payload);
-      expect(result.success).toEqual(batchTrackIds);
-      expect(result.failed).toEqual([]);
-      
+
+      expect(response.success).toEqual(batchTrackIds);
+      expect(response.failed).toEqual([]);
+
       // Verify all tracks were deleted
-      for (const id of batchTrackIds) {
-        const getResponse = await getServer().inject({
-          method: 'GET',
-          url: `/api/tracks/${id}`
-        });
-        
-        expect(getResponse.statusCode).toBe(404);
+      for (let i = 0; i < batchTrackIds.length; i++) {
+        await expect(
+          client.getTrackBySlug({
+            slug: `batch-track-delete-${i.toString()}`,
+          }),
+        ).rejects.toThrow();
       }
     });
-    
-    it('should return 400 for missing ids', async () => {
-      const response = await getServer().inject({
-        method: 'POST',
-        url: '/api/tracks/delete',
-        payload: {}
-      });
-      
-      expect(response.statusCode).toBe(400);
+
+    it('should return error for missing ids', async () => {
+      const { client } = getTestSetup();
+      await expect(client.deleteTracks({ ids: [] })).rejects.toThrow();
     });
   });
 });

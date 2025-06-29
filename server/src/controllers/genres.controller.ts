@@ -1,19 +1,24 @@
-import { getGenres } from '../utils/db';
-import { RouteHandler } from '../types';
+import { create } from '@bufbuild/protobuf';
+import { Code, ConnectError } from '@connectrpc/connect';
 
+import {
+  type GetGenresResponse,
+  GetGenresResponseSchema,
+} from '../generated/music/v1/music_pb';
+import { getGenres } from '../utils/db';
 
 /**
  * Get all available genres
  */
-export const getAllGenres: RouteHandler = async (
-  request,
-  reply
-) => {
+export async function getAllGenres(): Promise<GetGenresResponse> {
   try {
     const genres = await getGenres();
-    return reply.code(200).send(genres);
+
+    return create(GetGenresResponseSchema, {
+      genres,
+    });
   } catch (error) {
-    request.log.error(error);
-    return reply.code(500).send({ error: 'Internal Server Error' });
+    console.error('Error getting genres:', error);
+    throw new ConnectError('Failed to get genres', Code.Internal);
   }
-};
+}

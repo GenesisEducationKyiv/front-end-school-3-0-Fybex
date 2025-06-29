@@ -9,7 +9,6 @@ export default defineConfig({
     hookTimeout: 30000,
     isolate: true,
     watch: false,
-    threads: false,
     setupFiles: ['./src/__tests__/helpers/test-setup.ts'],
     coverage: {
       provider: 'v8',
@@ -21,8 +20,8 @@ export default defineConfig({
         'coverage/**',
         '**/*.d.ts',
         '**/*.test.ts',
-        'src/__tests__/**'
-      ]
-    }
+        'src/__tests__/**',
+      ],
+    },
   },
 });
