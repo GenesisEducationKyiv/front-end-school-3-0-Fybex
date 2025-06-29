@@ -29,6 +29,7 @@
     "eslint-plugin-import": "^2.32.0",
     "jiti": "^2.4.2",
     "supertest": "^7.0.0",
+    "tsx": "^4.20.3",
     "typescript-eslint": "^8.35.0",
     "vitest": "^3.0.7"
   },
@@ -43,18 +44,19 @@
   "scripts": {
     "bd:reset": "rm -rf ./data && cp -r ./data-initial ./data",
     "build": "tsc",
-    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "dev": "nodemon",
     "dev:with-proto": "npm run proto:generate:build && npm run dev",
     "lint": "eslint src --ext .ts",
     "proto:generate:build": "npm run generate:build --workspace=@music-app/proto",
-    "seed": "ts-node src/seed.ts",
+    "seed": "tsx src/seed.ts",
     "seed:prod": "node dist/seed.js",
-    "start": "node dist/index.js",
+    "start": "node --experimental-specifier-resolution=node dist/index.js",
     "test": "npm run proto:generate:build && vitest run",
     "test:ci": "npm run proto:generate:build && vitest run --reporter=verbose",
     "test:coverage": "npm run proto:generate:build && vitest run --coverage",
     "test:watch": "npm run proto:generate:build && vitest",
     "typecheck": "npm run proto:generate:build && tsc --noEmit"
   },
+  "type": "module",
   "version": "1.0.0"
 }
