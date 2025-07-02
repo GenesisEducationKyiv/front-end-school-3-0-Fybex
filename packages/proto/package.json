@@ -1,0 +1,68 @@
+{
+  "dependencies": {
+    "@bufbuild/protobuf": "^2.6.0"
+  },
+  "description": "Generated TypeScript types from Protocol Buffers for the Music App",
+  "devDependencies": {
+    "@bufbuild/buf": "^1.55.1",
+    "@bufbuild/protoc-gen-es": "^2.6.0",
+    "@connectrpc/protoc-gen-connect-query": "^2.1.0",
+    "@eslint/js": "^9.22.0",
+    "typescript": "^5.8.3"
+  },
+  "exports": {
+    ".": {
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./genres": {
+      "default": "./dist/generated/genres/v1/genres_pb.js",
+      "types": "./dist/generated/genres/v1/genres_pb.d.ts"
+    },
+    "./genres/connectquery": {
+      "import": "./dist/generated/genres/v1/genres-GenresService_connectquery.js",
+      "types": "./dist/generated/genres/v1/genres-GenresService_connectquery.d.ts"
+    },
+    "./health": {
+      "default": "./dist/generated/health/v1/health_pb.js",
+      "types": "./dist/generated/health/v1/health_pb.d.ts"
+    },
+    "./health/connectquery": {
+      "import": "./dist/generated/health/v1/health-HealthService_connectquery.js",
+      "types": "./dist/generated/health/v1/health-HealthService_connectquery.d.ts"
+    },
+    "./tracks": {
+      "default": "./dist/generated/tracks/v1/tracks_pb.js",
+      "types": "./dist/generated/tracks/v1/tracks_pb.d.ts"
+    },
+    "./tracks/connectquery": {
+      "import": "./dist/generated/tracks/v1/tracks-TracksService_connectquery.js",
+      "types": "./dist/generated/tracks/v1/tracks-TracksService_connectquery.d.ts"
+    }
+  },
+  "files": [
+    "dist/**/*",
+    "services/**/*.proto"
+  ],
+  "keywords": [
+    "protobuf",
+    "grpc",
+    "typescript",
+    "music-app"
+  ],
+  "main": "dist/index.js",
+  "name": "@music-app/proto",
+  "scripts": {
+    "breaking": "buf breaking --against '.git#branch=main'",
+    "build": "tsc",
+    "clean": "rm -rf dist src/generated",
+    "dev": "npm run generate:build",
+    "generate": "buf generate",
+    "generate:build": "npm run generate && npm run build",
+    "lint": "buf lint",
+    "prepublishOnly": "npm run clean && npm run generate:build"
+  },
+  "type": "module",
+  "types": "dist/index.d.ts",
+  "version": "1.0.0"
+}
