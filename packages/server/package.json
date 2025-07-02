@@ -5,6 +5,7 @@
     "@connectrpc/connect-fastify": "^2.0.2",
     "@connectrpc/connect-node": "^2.0.2",
     "@fastify/cors": "^11.0.0",
+    "@fastify/static": "^8.2.0",
     "@music-app/proto": "*",
     "@types/node": "^22.13.9",
     "dotenv": "^16.4.7",

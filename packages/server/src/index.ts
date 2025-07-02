@@ -1,5 +1,6 @@
 import { fastifyConnectPlugin } from '@connectrpc/connect-fastify';
 import cors from '@fastify/cors';
+import fastifyStatic from '@fastify/static';
 import Fastify from 'fastify';
 
 import config from './config';
@@ -39,6 +40,12 @@ async function start() {
         'Connect-Protocol-Version',
         'Connect-Timeout-Ms',
       ],
+    });
+
+    // Register static file serving for audio files
+    await fastify.register(fastifyStatic, {
+      root: config.storage.uploadsDir,
+      prefix: '/api/tracks/audio/',
     });
 
     // Register Connect RPC routes
