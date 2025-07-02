@@ -1,7 +1,7 @@
+import { type Track } from "@music-app/proto";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
-import type * as api from "@/lib/api/tracks";
 import { useDeleteTracks } from "@/lib/api/tracks";
 
 import { useTrackSelection } from "../useTrackSelection";
@@ -158,7 +158,7 @@ describe("useTrackSelection", () => {
     {
       name: "successful deletion",
       impl: (
-        _ids: api.TrackId[],
+        _ids: Track["id"][],
         { onSuccess }: { onSuccess: (res: unknown) => void }
       ) => {
         onSuccess({ success: ["track-1"], failed: [] });
@@ -168,7 +168,7 @@ describe("useTrackSelection", () => {
     {
       name: "failed deletion",
       impl: (
-        _ids: api.TrackId[],
+        _ids: Track["id"][],
         { onError }: { onError: (err: Error) => void }
       ) => {
         onError(new Error("Deletion failed"));
