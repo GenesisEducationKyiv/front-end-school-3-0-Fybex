@@ -22,7 +22,7 @@ Based on the case requirements, the application includes:
 ### Prerequisites
 
 - Node.js version v20.13.1 or later.
-- A running instance of the backend API server accessible at `http://localhost:8000` (can be changed in `.env`, see `.env.example`).
+- A running instance of the backend API server accessible at `http://localhost:8000` (can be changed in `.env`, see `.env.sample`).
 
 ### Installation
 
@@ -43,6 +43,14 @@ Based on the case requirements, the application includes:
     ```
 
 2. Open your browser and navigate to `http://localhost:3000`.
+
+## Build Commands
+
+```bash
+npm run build              # Production build
+npm run build:analyze      # Build with bundle analysis
+npm run preview            # Preview production build
+```
 
 ## Testing Strategy
 

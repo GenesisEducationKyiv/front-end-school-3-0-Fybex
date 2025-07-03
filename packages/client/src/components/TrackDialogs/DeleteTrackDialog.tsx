@@ -1,6 +1,5 @@
 import { create } from "@music-app/proto";
 import { type Track, DeleteTrackRequestSchema } from "@music-app/proto/tracks";
-import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -12,23 +11,22 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/AlertDialog";
 import { useDeleteTrack } from "@/lib/api/tracks";
 
 interface DeleteTrackDialogProps {
   track: Track;
-  children: ReactNode;
-  onDialogClose?: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onDialogClose: () => void;
 }
 
 function DeleteTrackDialog({
   track,
-  children,
+  open,
+  onOpenChange,
   onDialogClose,
 }: DeleteTrackDialogProps) {
-  const [open, setOpen] = useState(false);
-
   const mutation = useDeleteTrack();
 
   const handleDelete = () => {
@@ -39,25 +37,24 @@ function DeleteTrackDialog({
     mutation.mutate(deleteData, {
       onSuccess: () => {
         toast.success(`Track "${track.title}" deleted successfully!`);
-        setOpen(false);
+        onOpenChange(false);
       },
       onError: (error: Error) => {
         toast.error(`Failed to delete track: ${error.message}`);
-        setOpen(false);
+        onOpenChange(false);
       },
     });
   };
 
   const handleOpenChange = (isOpen: boolean) => {
-    setOpen(isOpen);
-    if (!isOpen && onDialogClose) {
+    onOpenChange(isOpen);
+    if (!isOpen) {
       onDialogClose();
     }
   };
 
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
       <AlertDialogContent data-testid="confirm-dialog">
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>

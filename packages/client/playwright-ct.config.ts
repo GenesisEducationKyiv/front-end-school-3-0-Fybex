@@ -1,12 +1,12 @@
 import { defineConfig } from "@playwright/experimental-ct-react";
 
-import { sharedViteConfig } from "./vite.config";
+import { baseSharedConfig } from "vite.config";
 
 export default defineConfig({
   testDir: "./src/components",
   testMatch: "*.ct.tsx",
   use: {
-    ctViteConfig: sharedViteConfig,
+    ctViteConfig: baseSharedConfig,
     ctPort: 3100,
     ctTemplateDir: "./playwright-ct",
   },

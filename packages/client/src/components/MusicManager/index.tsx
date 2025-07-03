@@ -1,15 +1,16 @@
 import { create } from "@music-app/proto";
 import { GetTracksRequestSchema, type Track } from "@music-app/proto/tracks";
-import { useMemo } from "react";
+import { lazy, Suspense, useMemo } from "react";
 
 import ActionsToolbar from "@/components/ActionsToolbar";
 import AppErrorBoundary from "@/components/AppErrorBoundary";
-import AudioPlayer from "@/components/AudioPlayer";
 import { useAudioPlayerStore } from "@/components/AudioPlayer/useAudioPlayerStore";
 import FiltersToolbar from "@/components/FiltersToolbar";
 import TracksTable from "@/components/TracksTable";
 import { useGetGenres } from "@/lib/api/genres";
 import { useGetTracks } from "@/lib/api/tracks";
+
+const AudioPlayer = lazy(() => import("@/components/AudioPlayer"));
 
 import {
   DEFAULT_PAGE,
@@ -23,6 +24,20 @@ const INITIAL_DATA = {
   tracks: [],
   meta: { total: 0, totalPages: 0, page: 1, limit: 10 },
 };
+
+const AudioPlayerFallback = () => (
+  <div
+    className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border shadow-lg flex items-center justify-center px-4 py-2"
+    style={{ height: 80 }}
+  >
+    <div className="flex items-center gap-3">
+      <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
+      <span className="text-sm text-muted-foreground animate-pulse">
+        Loading audio player...
+      </span>
+    </div>
+  </div>
+);
 
 export default function MusicManager() {
   const { data: genresResponse } = useGetGenres();
@@ -125,7 +140,11 @@ export default function MusicManager() {
         />
       </AppErrorBoundary>
 
-      <AudioPlayer />
+      {currentTrack && (
+        <Suspense fallback={<AudioPlayerFallback />}>
+          <AudioPlayer />
+        </Suspense>
+      )}
     </>
   );
 }
