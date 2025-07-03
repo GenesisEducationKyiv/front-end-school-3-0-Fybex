@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { create } from "@music-app/proto";
 import { CreateTrackRequestSchema } from "@music-app/proto/tracks";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -11,7 +11,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/Dialog";
 import { useGetGenres } from "@/lib/api/genres";
 import { useCreateTrack } from "@/lib/api/tracks";
@@ -20,12 +19,14 @@ import BaseForm from "./BaseForm";
 import { trackFormSchema, type TrackFormData } from "./types";
 
 interface CreateTrackDialogProps {
-  children: React.ReactNode;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-function CreateTrackDialog({ children }: CreateTrackDialogProps) {
-  const [open, setOpen] = useState(false);
-
+export default function CreateTrackDialog({
+  open,
+  onOpenChange,
+}: CreateTrackDialogProps) {
   const { data: genresResponse } = useGetGenres();
   const availableGenres = genresResponse?.genres ?? [];
 
@@ -59,7 +60,7 @@ function CreateTrackDialog({ children }: CreateTrackDialogProps) {
           toast.success(`Track "${createdTrack.title}" created successfully!`);
         }
         form.reset();
-        setOpen(false);
+        onOpenChange(false);
       },
       onError: (error: Error) => {
         toast.error(`Failed to create track: ${error.message}`);
@@ -74,8 +75,7 @@ function CreateTrackDialog({ children }: CreateTrackDialogProps) {
   }, [open, form]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="sm:max-w-[425px]"
         data-testid="create-track-dialog"
@@ -93,7 +93,7 @@ function CreateTrackDialog({ children }: CreateTrackDialogProps) {
           isLoading={mutation.isPending}
           submitButtonText="Create Track"
           onCancel={() => {
-            setOpen(false);
+            onOpenChange(false);
           }}
           onSubmit={onSubmit}
         />
@@ -101,5 +101,3 @@ function CreateTrackDialog({ children }: CreateTrackDialogProps) {
     </Dialog>
   );
 }
-
-export default CreateTrackDialog;
