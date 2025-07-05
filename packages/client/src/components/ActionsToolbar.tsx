@@ -1,18 +1,15 @@
 import { Trash2 } from "lucide-react";
+import { lazy, Suspense, useState } from "react";
 
-import CreateTrackDialog from "@/components/TrackDialogs/CreateTrackDialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/AlertDialog";
 import { Button } from "@/components/ui/Button";
+import { DialogFallback } from "@/components/ui/DialogFallback";
+
+const CreateTrackDialog = lazy(
+  () => import("@/components/TrackDialogs/CreateTrackDialog")
+);
+const BulkDeleteDialog = lazy(
+  () => import("@/components/TrackDialogs/BulkDeleteDialog")
+);
 
 interface ActionsToolbarProps {
   selectedCount: number;
@@ -25,55 +22,55 @@ export default function ActionsToolbar({
   onDelete,
   isDeleting = false,
 }: ActionsToolbarProps) {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+
   return (
     <div className="flex items-center gap-2">
       {selectedCount > 0 && (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button
-              data-testid="bulk-delete-button"
-              size="sm"
-              variant="destructive"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete ({selectedCount})
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the
-                selected{" "}
-                <span className="font-semibold">
-                  {selectedCount} track
-                  {selectedCount > 1 ? "s" : ""}
-                </span>
-                .
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel data-testid="cancel-bulk-delete">
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                data-testid="confirm-bulk-delete"
-                disabled={isDeleting}
-                onClick={onDelete}
-              >
-                {isDeleting ? "Deleting..." : "Delete"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <Button
+          data-testid="bulk-delete-button"
+          size="sm"
+          variant="destructive"
+          onClick={() => {
+            setIsBulkDeleteDialogOpen(true);
+          }}
+        >
+          <Trash2 className="w-4 h-4 mr-2" />
+          Delete ({selectedCount})
+        </Button>
       )}
 
-      <CreateTrackDialog>
-        <Button data-testid="create-track-button" size="sm">
-          Create Track
-        </Button>
-      </CreateTrackDialog>
+      <Button
+        data-testid="create-track-button"
+        size="sm"
+        onClick={() => {
+          setIsCreateDialogOpen(true);
+        }}
+      >
+        Create Track
+      </Button>
+
+      {isCreateDialogOpen && (
+        <Suspense fallback={<DialogFallback />}>
+          <CreateTrackDialog
+            open={isCreateDialogOpen}
+            onOpenChange={setIsCreateDialogOpen}
+          />
+        </Suspense>
+      )}
+
+      {isBulkDeleteDialogOpen && (
+        <Suspense fallback={<DialogFallback />}>
+          <BulkDeleteDialog
+            isDeleting={isDeleting}
+            open={isBulkDeleteDialogOpen}
+            selectedCount={selectedCount}
+            onConfirm={onDelete}
+            onOpenChange={setIsBulkDeleteDialogOpen}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
