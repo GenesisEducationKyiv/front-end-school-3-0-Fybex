@@ -69,11 +69,11 @@ export default function MusicManager() {
   const currentTrack = useAudioPlayerStore((state) => state.track);
   const isPlaying = useAudioPlayerStore((state) => state.isPlaying);
   const setTrack = useAudioPlayerStore((state) => state.setTrack);
-  const togglePlayPause = useAudioPlayerStore((state) => state.togglePlayPause);
+  const setIsPlaying = useAudioPlayerStore((state) => state.setIsPlaying);
 
   const handleTrackClick = (clickedTrack: Track) => {
     if (clickedTrack.id === currentTrack?.id) {
-      togglePlayPause();
+      setIsPlaying(!isPlaying);
     } else {
       setTrack(clickedTrack);
     }
