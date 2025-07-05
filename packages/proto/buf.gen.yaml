@@ -1,0 +1,8 @@
+version: v2
+plugins:
+  - local: protoc-gen-es
+    out: src/generated
+    opt: target=ts,import_extension=js
+  - local: protoc-gen-connect-query
+    out: src/generated
+    opt: target=ts,import_extension=js
