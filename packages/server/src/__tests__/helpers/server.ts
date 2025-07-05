@@ -8,9 +8,9 @@ import { GenresService, HealthService, TracksService } from '@music-app/proto';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { afterAll, beforeAll } from 'vitest';
 
-import config from '../../config';
-import routes from '../../routes';
-import { initializeDb } from '../../utils/db';
+import config from '../../config/index.js';
+import routes from '../../routes.js';
+import { initializeDb } from '../../utils/db.js';
 
 // Test data paths from config
 const TEST_DATA_DIR = config.storage.dataDir;

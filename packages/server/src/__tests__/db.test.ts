@@ -9,9 +9,9 @@ import {
   getTracks,
   initializeDb,
   updateTrack,
-} from '../utils/db';
+} from '../utils/db.js';
 
-import { cleanupTestData, setupTestData } from './helpers/server';
+import { cleanupTestData, setupTestData } from './helpers/server.js';
 
 describe('Database Utility Functions', () => {
   const testTrack = {

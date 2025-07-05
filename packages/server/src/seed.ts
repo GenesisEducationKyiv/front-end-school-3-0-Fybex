@@ -1,4 +1,4 @@
-import { seedDatabase } from './utils/seed-data';
+import { seedDatabase } from './utils/seed-data.js';
 
 /**
  * Seed script to populate the database with fake track data

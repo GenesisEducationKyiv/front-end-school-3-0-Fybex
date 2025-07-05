@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { setupTestServer } from './helpers/server';
+import { setupTestServer } from './helpers/server.js';
 
 describe('Health Check', () => {
   const getTestSetup = setupTestServer();

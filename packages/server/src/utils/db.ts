@@ -1,12 +1,12 @@
 import fs from 'fs/promises';
 import path from 'path';
 
-import config from '../config';
+import config from '../config/index.js';
 import {
   type BatchDeleteResponse,
   type QueryParams,
   type Track,
-} from '../types';
+} from '../types/index.js';
 
 /**
  * Result of getTracks with pagination

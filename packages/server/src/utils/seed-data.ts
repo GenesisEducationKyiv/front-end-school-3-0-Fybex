@@ -1,10 +1,10 @@
 import fs from 'fs/promises';
 
-import config from '../config';
-import { type Track } from '../types';
+import config from '../config/index.js';
+import { type Track } from '../types/index.js';
 
-import { createTrack } from './db';
-import { createSlug } from './slug';
+import { createTrack } from './db.js';
+import { createSlug } from './slug.js';
 
 // Initialize directories
 const initDirectories = async () => {

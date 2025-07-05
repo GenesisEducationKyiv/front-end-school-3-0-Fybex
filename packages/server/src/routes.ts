@@ -1,9 +1,9 @@
 import type { ConnectRouter } from '@connectrpc/connect';
 import { GenresService, HealthService, TracksService } from '@music-app/proto';
 
-import { genresService } from './services/genres.service';
-import { healthService } from './services/health.service';
-import { tracksService } from './services/tracks.service';
+import { genresService } from './services/genres.service.js';
+import { healthService } from './services/health.service.js';
+import { tracksService } from './services/tracks.service.js';
 
 export default (router: ConnectRouter) => {
   router.service(GenresService, genresService);

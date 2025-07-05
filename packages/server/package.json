@@ -43,7 +43,7 @@
   "main": "dist/index.js",
   "name": "@music-app/server",
   "scripts": {
-    "bd:reset": "rm -rf ./data && cp -r ./data-initial ./data",
+    "db:reset": "rm -rf ./data && cp -r ./data-initial ./data",
     "build": "tsc",
     "dev": "nodemon",
     "dev:with-proto": "npm run proto:generate:build && npm run dev",
@@ -51,7 +51,7 @@
     "proto:generate:build": "npm run generate:build --workspace=@music-app/proto",
     "seed": "tsx src/seed.ts",
     "seed:prod": "node dist/seed.js",
-    "start": "node --experimental-specifier-resolution=node dist/index.js",
+    "start": "node dist/src/index.js",
     "test": "npm run proto:generate:build && vitest run",
     "test:ci": "npm run proto:generate:build && vitest run --reporter=verbose",
     "test:coverage": "npm run proto:generate:build && vitest run --coverage",

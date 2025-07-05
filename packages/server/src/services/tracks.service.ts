@@ -10,7 +10,7 @@ import {
   removeTracks,
   updateTrackById,
   uploadTrackFile,
-} from '../controllers/tracks.controller';
+} from '../controllers/tracks.controller.js';
 
 export const tracksService: ServiceImpl<typeof TracksService> = {
   getTracks: getAllTracks,

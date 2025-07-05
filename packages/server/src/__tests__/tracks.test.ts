@@ -1,7 +1,7 @@
 import { SortField, SortOrder } from '@music-app/proto';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { resetTestDatabase, setupTestServer } from './helpers/server';
+import { resetTestDatabase, setupTestServer } from './helpers/server.js';
 
 describe('Tracks', () => {
   const getTestSetup = setupTestServer();

@@ -5,7 +5,7 @@ import {
   GetGenresResponseSchema,
 } from '@music-app/proto';
 
-import { getGenres } from '../utils/db';
+import { getGenres } from '../utils/db.js';
 
 /**
  * Get all available genres

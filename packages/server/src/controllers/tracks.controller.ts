@@ -33,7 +33,7 @@ import {
   UploadFileResponseSchema,
 } from '@music-app/proto';
 
-import { type Track as DbTrack } from '../types';
+import { type Track as DbTrack } from '../types/index.js';
 import {
   createTrack,
   deleteAudioFile,
@@ -44,8 +44,8 @@ import {
   getTracks,
   saveAudioFile,
   updateTrack,
-} from '../utils/db';
-import { createSlug } from '../utils/slug';
+} from '../utils/db.js';
+import { createSlug } from '../utils/slug.js';
 
 // Helper function to convert Date to Timestamp
 function dateToTimestamp(date: Date): Timestamp {

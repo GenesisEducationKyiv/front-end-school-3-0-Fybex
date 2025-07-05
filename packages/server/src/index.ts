@@ -3,9 +3,9 @@ import cors from '@fastify/cors';
 import fastifyStatic from '@fastify/static';
 import Fastify from 'fastify';
 
-import config from './config';
-import routes from './routes';
-import { initializeDb } from './utils/db';
+import config from './config/index.js';
+import routes from './routes.js';
+import { initializeDb } from './utils/db.js';
 
 async function start() {
   try {
