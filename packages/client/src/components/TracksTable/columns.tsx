@@ -69,12 +69,21 @@ export const columns: ColumnDef<Track>[] = [
       const IconComponent = isCurrent && meta.isPlaying ? Pause : Play;
 
       return (
-        <div className="relative w-10 h-10">
+        <div className="relative w-10 h-10 group">
           <TrackCover
             alt={track.title}
             className="w-full h-full"
             iconSize={16}
             src={cover ?? null}
+          />
+          {/* Overlay for hover/focus */}
+          <div
+            className={
+              "absolute inset-0 bg-black/30 pointer-events-none transition-opacity rounded " +
+              (isCurrent && meta.isPlaying
+                ? "opacity-100"
+                : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100")
+            }
           />
           {showPlayButton && (
             <Button
@@ -83,10 +92,10 @@ export const columns: ColumnDef<Track>[] = [
                   ? `Pause ${track.title}`
                   : `Play ${track.title}`
               }
-              className="absolute inset-0 flex items-center justify-center w-full h-full rounded bg-black/20 hover:bg-black/40 transition-colors opacity-0 group-hover:opacity-100 focus-within:opacity-100"
+              className="absolute inset-0 flex items-center justify-center w-8 h-8 m-auto rounded bg-transparent hover:bg-transparent focus:bg-transparent active:bg-transparent"
               size="icon"
               type="button"
-              variant="ghost"
+              variant="default"
               onClick={(e) => {
                 e.stopPropagation();
                 meta?.onPlayTrack(track);

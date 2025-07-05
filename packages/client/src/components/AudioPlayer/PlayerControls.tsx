@@ -9,8 +9,12 @@ interface PlayerControlsProps {
 
 export default function PlayerControls({ trackId }: PlayerControlsProps) {
   const isPlaying = useAudioPlayerStore((state) => state.isPlaying);
+  const setIsPlaying = useAudioPlayerStore((state) => state.setIsPlaying);
   const Icon = isPlaying ? Pause : Play;
-  const togglePlayPause = useAudioPlayerStore((state) => state.togglePlayPause);
+
+  const handleClick = () => {
+    setIsPlaying(!isPlaying);
+  };
 
   return (
     <Button
@@ -21,7 +25,7 @@ export default function PlayerControls({ trackId }: PlayerControlsProps) {
       }
       size="icon"
       variant="ghost"
-      onClick={togglePlayPause}
+      onClick={handleClick}
     >
       <Icon className="w-5 h-5" />
     </Button>
