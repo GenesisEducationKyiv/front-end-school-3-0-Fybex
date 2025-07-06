@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  NODE_VERSION: '20'
+  ARTIFACT_RETENTION_DAYS: '14'
+
 jobs:
   lint:
     name: ESLint
@@ -14,7 +18,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.github/actions/setup-deps
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Run ESLint
         run: npm run lint
@@ -26,7 +32,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.github/actions/setup-deps
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: TypeScript check
         run: npm run typecheck
@@ -39,7 +47,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.github/actions/setup-deps
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Build client
         run: npm run build --workspace=@music-app/client
@@ -50,7 +60,7 @@ jobs:
         with:
           name: client-build
           path: packages/client/dist/
-          retention-days: 14
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
   build-server:
     name: Build Server
@@ -60,7 +70,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.github/actions/setup-deps
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Build server
         run: npm run build --workspace=@music-app/server
@@ -71,7 +83,7 @@ jobs:
         with:
           name: server-build
           path: packages/server/dist/
-          retention-days: 30
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
 
   test-server:
     name: Server Tests
@@ -81,7 +93,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.github/actions/setup-deps
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Run server tests
         run: npm run server:test
@@ -97,6 +111,7 @@ jobs:
         uses: ./.github/actions/test-client
         with:
           test-type: unit
+          node-version: ${{ env.NODE_VERSION }}
 
   test-client-integration:
     name: Client Integration Tests
@@ -109,6 +124,7 @@ jobs:
         uses: ./.github/actions/test-client
         with:
           test-type: integration
+          node-version: ${{ env.NODE_VERSION }}
 
   test-client-component:
     name: Client Component Tests
@@ -122,6 +138,7 @@ jobs:
         with:
           test-type: ct
           needs-playwright: 'true'
+          node-version: ${{ env.NODE_VERSION }}
 
   test-e2e:
     name: E2E Tests
@@ -132,6 +149,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Playwright
         uses: ./.github/actions/setup-playwright
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Download client build artifacts
         uses: actions/download-artifact@v4
@@ -147,3 +166,11 @@ jobs:
 
       - name: Run E2E tests
         run: E2E_SKIP_BUILD=true npm run test:e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: packages/client/playwright-report/
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}

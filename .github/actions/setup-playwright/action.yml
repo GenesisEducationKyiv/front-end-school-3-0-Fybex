@@ -4,14 +4,13 @@ description: "Setup Node.js, dependencies and install Playwright browsers"
 inputs:
   node-version:
     description: "Node.js version to use"
-    required: false
-    default: "20"
+    required: true
 
 runs:
   using: "composite"
   steps:
-    - name: Setup
-      uses: ./.github/actions/setup
+    - name: Setup Node.js
+      uses: ./.github/actions/setup-node
       with:
         node-version: ${{ inputs.node-version }}
 

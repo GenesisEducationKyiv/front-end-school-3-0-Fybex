@@ -9,17 +9,24 @@ inputs:
     description: "Whether Playwright browsers are needed"
     required: false
     default: "false"
+  node-version:
+    description: "Node.js version to use"
+    required: true
 
 runs:
   using: "composite"
   steps:
     - name: Setup
       if: ${{ inputs.needs-playwright == 'false' }}
-      uses: ./.github/actions/setup
+      uses: ./.github/actions/setup-deps
+      with:
+        node-version: ${{ inputs.node-version }}
 
     - name: Setup Playwright
       if: ${{ inputs.needs-playwright == 'true' }}
       uses: ./.github/actions/setup-playwright
+      with:
+        node-version: ${{ inputs.node-version }}
 
     - name: Run tests
       shell: bash
