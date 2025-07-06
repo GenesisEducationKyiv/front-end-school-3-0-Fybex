@@ -60,6 +60,7 @@
     "generate": "buf generate",
     "generate:build": "npm run generate && npm run build",
     "lint": "buf lint",
+    "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run clean && npm run generate:build"
   },
   "type": "module",

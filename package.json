@@ -10,6 +10,7 @@
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
     "proto:generate": "npm run generate --workspace=@music-app/proto",
     "proto:build": "npm run build --workspace=@music-app/proto",
     "proto:generate:build": "npm run generate:build --workspace=@music-app/proto",

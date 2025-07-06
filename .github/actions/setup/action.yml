@@ -1,0 +1,39 @@
+name: 'Setup Node.js and Dependencies'
+description: 'Common setup steps for Node.js with caching'
+
+inputs:
+  node-version:
+    description: 'Node.js version to use'
+    required: false
+    default: '20'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+
+    - name: Restore cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          node_modules
+          packages/*/node_modules
+        key: deps-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        if [ ! -d "node_modules" ]; then
+          npm ci
+        fi
+
+    - name: Generate proto files
+      shell: bash
+      run: npm run proto:generate:build 
