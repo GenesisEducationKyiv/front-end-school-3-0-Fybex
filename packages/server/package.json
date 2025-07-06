@@ -48,6 +48,7 @@
     "dev": "nodemon",
     "dev:with-proto": "npm run proto:generate:build && npm run dev",
     "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
     "proto:generate:build": "npm run generate:build --workspace=@music-app/proto",
     "seed": "tsx src/seed.ts",
     "seed:prod": "node dist/seed.js",
@@ -55,8 +56,7 @@
     "test": "npm run proto:generate:build && vitest run",
     "test:ci": "npm run proto:generate:build && vitest run --reporter=verbose",
     "test:coverage": "npm run proto:generate:build && vitest run --coverage",
-    "test:watch": "npm run proto:generate:build && vitest",
-    "typecheck": "npm run proto:generate:build && tsc --noEmit"
+    "test:watch": "npm run proto:generate:build && vitest"
   },
   "type": "module",
   "version": "1.0.0"
