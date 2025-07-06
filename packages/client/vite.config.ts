@@ -1,4 +1,5 @@
 /// <reference types="vitest/config" />
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -10,18 +11,51 @@ import { defineConfig } from "vite";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const chunkGroups = {
-  ui: ["@radix-ui", "@floating-ui", "sonner"],
-  forms: ["react-hook-form", "@hookform", "zod"],
+const clientPkg = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, "package.json"), "utf-8")
+) as { dependencies: Record<string, string> };
+const dependencies = Object.keys(clientPkg.dependencies);
+
+const chunkGroupPrefixes: Record<string, string[]> = {
+  ui: [
+    "@radix-ui/",
+    "sonner",
+    "cmdk",
+    "tailwind-merge",
+    "tailwindcss",
+    "lucide-react",
+    "@tanstack/react-table",
+  ],
+  forms: ["react-hook-form", "@hookform/", "zod"],
   query: [
     "@tanstack/react-query",
     "@tanstack/query-core",
-    "@connectrpc",
-    "@bufbuild",
+    "@connectrpc/",
+    "@bufbuild/",
     "zustand",
   ],
-  react: ["react", "react-dom"],
 };
+
+const chunkGroups: Record<string, string[]> = {};
+for (const [groupName, prefixes] of Object.entries(chunkGroupPrefixes)) {
+  const pkgs: string[] = [];
+  for (const prefix of prefixes) {
+    if (prefix.endsWith("/")) {
+      for (const dep of dependencies) {
+        if (dep.startsWith(prefix)) {
+          pkgs.push(dep);
+        }
+      }
+    } else {
+      if (dependencies.includes(prefix)) {
+        pkgs.push(prefix);
+      }
+    }
+  }
+  chunkGroups[groupName] = pkgs;
+}
+
+console.log(chunkGroups);
 
 export const baseSharedConfig = {
   server: {
@@ -64,16 +98,7 @@ export default defineConfig({
         );
       },
       output: {
-        manualChunks: (id: string) => {
-          if (id.includes("node_modules")) {
-            for (const [chunkName, pkgs] of Object.entries(chunkGroups)) {
-              if (pkgs.some((pkg) => id.includes(pkg))) {
-                return chunkName;
-              }
-            }
-            return "vendor";
-          }
-        },
+        manualChunks: chunkGroups,
       },
     },
     chunkSizeWarningLimit: 500,

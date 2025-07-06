@@ -42,7 +42,7 @@ const selectionColumn: ColumnDef<Track> = {
       onCheckedChange={(value) => {
         row.toggleSelected(!!value);
       }}
-      onClick={(e) => {
+      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
       }}
     />
