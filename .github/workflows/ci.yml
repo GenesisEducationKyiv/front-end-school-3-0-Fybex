@@ -101,8 +101,8 @@ jobs:
           test-type: ct
           needs-playwright: 'true'
 
-  test-client-e2e:
-    name: Client E2E Tests
+  test-e2e:
+    name: E2E Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

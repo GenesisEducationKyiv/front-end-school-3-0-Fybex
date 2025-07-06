@@ -8,7 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : 1,
   reporter: "html",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: "http://localhost:4173",
     trace: "on-first-retry",
   },
 
@@ -34,10 +34,20 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
-    command: "npm run dev",
-    url: "http://localhost:3000",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-  },
+  webServer: [
+    {
+      command: "npm run build --workspace=@music-app/client && npm run preview --workspace=@music-app/client",
+      url: "http://localhost:4173",
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+      name: "Client",
+    },
+    {
+      command: "npm run build --workspace=@music-app/server && npm run start --workspace=@music-app/server",
+      url: "http://localhost:8000/healthz",
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+      name: "Server",
+    },
+  ],
 });

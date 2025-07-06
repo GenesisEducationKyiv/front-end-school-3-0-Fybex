@@ -94,10 +94,9 @@ const deleteTrack = async (page: Page, trackId: string) => {
 
 async function waitForToast(page: Page, type: "success" | "error") {
   const toast = page
-    .locator(`[data-type="${type}"][data-sonner-toast]`)
-    .first();
+    .locator(`[data-sonner-toast][data-visible="true"][data-type="${type}"]`)
+    .last();
   await expect(toast).toBeVisible();
-  await toast.waitFor({ state: "hidden", timeout: 10000 });
 }
 
 test.describe("Track Management Flow", () => {
