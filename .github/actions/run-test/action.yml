@@ -1,0 +1,45 @@
+name: "Run Test"
+description: "Run any type of test with optional environment variables"
+
+inputs:
+  test-type:
+    description: "Type of test to run (unit, integration, ct, e2e)"
+    required: true
+  needs-playwright:
+    description: "Whether Playwright browsers are needed"
+    required: false
+    default: "false"
+  node-version:
+    description: "Node.js version to use"
+    required: true
+  env-vars:
+    description: "Environment variables to set (format: KEY1=value1,KEY2=value2)"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup
+      uses: ./.github/actions/setup
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Install Playwright browsers
+      if: ${{ inputs.needs-playwright == 'true' }}
+      shell: bash
+      run: |
+        cd packages/client
+        npx playwright install --with-deps chromium
+
+    - name: Run tests
+      shell: bash
+      run: |
+        cd packages/client
+        if [ -n "${{ inputs.env-vars }}" ]; then
+          IFS=',' read -ra VARS <<< "${{ inputs.env-vars }}"
+          for VAR in "${VARS[@]}"; do
+            export "$VAR"
+          done
+        fi
+        npm run test:${{ inputs.test-type }} 

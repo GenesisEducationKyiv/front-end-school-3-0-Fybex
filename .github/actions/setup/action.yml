@@ -1,5 +1,5 @@
-name: "Setup Dependencies"
-description: "Install dependencies and generate proto files"
+name: "Setup"
+description: "Setup Node.js and install dependencies"
 
 inputs:
   node-version:
@@ -9,10 +9,14 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Setup Node.js
-      uses: ./.github/actions/setup-node
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node-version }}
+        cache: "npm"
 
     - name: Restore cache
       uses: actions/cache@v4
@@ -31,4 +35,4 @@ runs:
 
     - name: Generate proto files
       shell: bash
-      run: npm run proto:generate:build
+      run: npm run proto:generate:build 
