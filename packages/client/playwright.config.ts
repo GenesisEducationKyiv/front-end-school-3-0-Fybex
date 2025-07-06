@@ -36,18 +36,26 @@ export default defineConfig({
 
   webServer: [
     {
-      command: "npm run build --workspace=@music-app/client && npm run preview --workspace=@music-app/client",
+      command:
+        process.env.E2E_SKIP_BUILD === "true"
+          ? "npm run client:preview"
+          : "npm run client:build-and-preview",
       url: "http://localhost:4173",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
       name: "Client",
+      cwd: "../"
     },
     {
-      command: "npm run build --workspace=@music-app/server && npm run start --workspace=@music-app/server",
+      command:
+        process.env.E2E_SKIP_BUILD === "true"
+          ? "npm run server:start"
+          : "npm run server:build-and-start",
       url: "http://localhost:8000/healthz",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
       name: "Server",
+      cwd: "../"
     },
   ],
 });

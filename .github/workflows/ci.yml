@@ -34,6 +34,7 @@ jobs:
   build-client:
     name: Build Client
     runs-on: ubuntu-latest
+    needs: [lint, typecheck]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,6 +55,7 @@ jobs:
   build-server:
     name: Build Server
     runs-on: ubuntu-latest
+    needs: [lint, typecheck]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -74,6 +76,7 @@ jobs:
   test-server:
     name: Server Tests
     runs-on: ubuntu-latest
+    needs: [lint, typecheck]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -86,6 +89,7 @@ jobs:
   test-client-unit:
     name: Client Unit Tests
     runs-on: ubuntu-latest
+    needs: [lint, typecheck]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -97,6 +101,7 @@ jobs:
   test-client-integration:
     name: Client Integration Tests
     runs-on: ubuntu-latest
+    needs: [lint, typecheck]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -108,6 +113,7 @@ jobs:
   test-client-component:
     name: Client Component Tests
     runs-on: ubuntu-latest
+    needs: [lint, typecheck]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -120,11 +126,24 @@ jobs:
   test-e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
+    needs: [build-client, build-server]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Run E2E tests
-        uses: ./.github/actions/test-client
+      - name: Setup Playwright
+        uses: ./.github/actions/setup-playwright
+
+      - name: Download client build artifacts
+        uses: actions/download-artifact@v4
         with:
-          test-type: e2e
-          needs-playwright: "true"
+          name: client-build
+          path: packages/client/dist/
+
+      - name: Download server build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: server-build
+          path: packages/server/dist/
+
+      - name: Run E2E tests
+        run: E2E_SKIP_BUILD=true npm run test:e2e

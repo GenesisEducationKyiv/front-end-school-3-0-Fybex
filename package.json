@@ -18,6 +18,10 @@
     "client:dev": "npm run dev --workspace=@music-app/client",
     "server:dev": "npm run dev:with-proto --workspace=@music-app/server",
     "server:test": "npm run test --workspace=@music-app/server",
+    "server:start": "npm run start --workspace=@music-app/server",
+    "server:build-and-start": "npm run build --workspace=@music-app/server && npm run start --workspace=@music-app/server",
+    "client:preview": "npm run preview --workspace=@music-app/client",
+    "client:build-and-preview": "npm run build --workspace=@music-app/client && npm run preview --workspace=@music-app/client",
     "client:test": "npm run test:vitest --workspace=@music-app/client",
     "test:e2e": "npm run test:e2e --workspace=@music-app/client"
   },
