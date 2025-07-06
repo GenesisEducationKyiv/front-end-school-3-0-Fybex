@@ -44,7 +44,7 @@
   "name": "@music-app/server",
   "scripts": {
     "db:reset": "rm -rf ./data && cp -r ./data-initial ./data",
-    "build": "tsc",
+    "build": "tsc --project tsconfig.build.json",
     "dev": "nodemon",
     "dev:with-proto": "npm run proto:generate:build && npm run dev",
     "lint": "eslint src --ext .ts",
