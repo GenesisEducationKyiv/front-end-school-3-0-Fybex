@@ -43,6 +43,14 @@ jobs:
       - name: Build client
         run: npm run build --workspace=@music-app/client
 
+      - name: Upload client build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-build
+          path: packages/client/dist/
+          retention-days: 14
+
   build-server:
     name: Build Server
     runs-on: ubuntu-latest
@@ -54,6 +62,14 @@ jobs:
 
       - name: Build server
         run: npm run build --workspace=@music-app/server
+
+      - name: Upload server build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-build
+          path: packages/server/dist/
+          retention-days: 30
 
   test-server:
     name: Server Tests
