@@ -1,14 +1,14 @@
-name: 'Setup Node.js and Dependencies'
-description: 'Common setup steps for Node.js with caching'
+name: "Setup Node.js and Dependencies"
+description: "Common setup steps for Node.js with caching"
 
 inputs:
   node-version:
-    description: 'Node.js version to use'
+    description: "Node.js version to use"
     required: false
-    default: '20'
+    default: "20"
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -17,7 +17,7 @@ runs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node-version }}
-        cache: 'npm'
+        cache: "npm"
 
     - name: Restore cache
       uses: actions/cache@v4
@@ -36,4 +36,4 @@ runs:
 
     - name: Generate proto files
       shell: bash
-      run: npm run proto:generate:build 
+      run: npm run proto:generate:build

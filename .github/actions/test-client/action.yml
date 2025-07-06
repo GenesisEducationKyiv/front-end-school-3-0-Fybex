@@ -1,17 +1,17 @@
-name: 'Run Client Tests'
-description: 'Run specific type of client tests'
+name: "Run Client Tests"
+description: "Run specific type of client tests"
 
 inputs:
   test-type:
-    description: 'Type of test to run (unit, integration, ct, e2e)'
+    description: "Type of test to run (unit, integration, ct, e2e)"
     required: true
   needs-playwright:
-    description: 'Whether Playwright browsers are needed'
+    description: "Whether Playwright browsers are needed"
     required: false
-    default: 'false'
+    default: "false"
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Setup
       if: ${{ inputs.needs-playwright == 'false' }}
@@ -25,4 +25,4 @@ runs:
       shell: bash
       run: |
         cd packages/client
-        npm run test:${{ inputs.test-type }} 
+        npm run test:${{ inputs.test-type }}
