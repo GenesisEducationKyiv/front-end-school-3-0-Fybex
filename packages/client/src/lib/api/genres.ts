@@ -9,11 +9,12 @@ export const genreQueryKeys = {
 };
 
 export const useGetGenres = () => {
-  return useApiQuery(
+  const response = useApiQuery(
     getGenres,
     {},
     {
       staleTime: 60 * 1000 * 5, // 5 minutes
     }
   );
+  return response.data?.genres ?? [];
 };

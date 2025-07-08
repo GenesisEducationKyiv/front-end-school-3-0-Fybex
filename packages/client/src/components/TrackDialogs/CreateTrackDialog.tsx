@@ -27,8 +27,7 @@ export default function CreateTrackDialog({
   open,
   onOpenChange,
 }: CreateTrackDialogProps) {
-  const { data: genresResponse } = useGetGenres();
-  const availableGenres = genresResponse?.genres ?? [];
+  const availableGenres = useGetGenres();
 
   const form = useForm<TrackFormData>({
     resolver: zodResolver(trackFormSchema),
