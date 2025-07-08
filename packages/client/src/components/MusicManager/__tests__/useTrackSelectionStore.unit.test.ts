@@ -1,14 +1,16 @@
-import { type Track } from "@music-app/proto";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 import { useDeleteTracks } from "@/lib/api/tracks";
 
-import { useTrackSelection } from "../useTrackSelection";
+import {
+  useTrackSelectionActions,
+  useTrackSelectionStore,
+} from "../useTrackSelectionStore";
 
 vi.mock("@/lib/api/tracks");
 
-describe("useTrackSelection", () => {
+describe("useTrackSelectionStore", () => {
   let mockMutate: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -17,13 +19,17 @@ describe("useTrackSelection", () => {
       mutate: mockMutate,
       isPending: false,
     });
+    act(() => {
+      useTrackSelectionStore.getState().clearSelection();
+    });
   });
 
-  const setup = () => renderHook(() => useTrackSelection());
+  const setupStore = () => renderHook(() => useTrackSelectionStore());
+  const setupActions = () => renderHook(() => useTrackSelectionActions());
 
   it("should handle selection change", () => {
     // Arrange
-    const { result } = setup();
+    const { result } = setupStore();
     const ids = ["track-1", "track-2"];
 
     // Act
@@ -37,7 +43,7 @@ describe("useTrackSelection", () => {
 
   it("should deduplicate track IDs in selection change", () => {
     // Arrange
-    const { result } = setup();
+    const { result } = setupStore();
     const idsWithDuplicates = [
       "track-1",
       "track-2",
@@ -59,7 +65,7 @@ describe("useTrackSelection", () => {
 
   it("should handle all duplicate IDs", () => {
     // Arrange
-    const { result } = setup();
+    const { result } = setupStore();
     const allDuplicates = ["track-1", "track-1", "track-1"];
     const expectedUniqueIds = ["track-1"];
 
@@ -75,7 +81,7 @@ describe("useTrackSelection", () => {
 
   it("should maintain order of first occurrence when deduplicating", () => {
     // Arrange
-    const { result } = setup();
+    const { result } = setupStore();
     const idsWithDuplicates = [
       "track-3",
       "track-1",
@@ -96,7 +102,7 @@ describe("useTrackSelection", () => {
 
   it("should handle empty array selection", () => {
     // Arrange
-    const { result } = setup();
+    const { result } = setupStore();
     act(() => {
       result.current.handleSelectionChange(["track-1", "track-2"]);
     });
@@ -112,7 +118,7 @@ describe("useTrackSelection", () => {
 
   it("should clear selection", () => {
     // Arrange
-    const { result } = setup();
+    const { result } = setupStore();
     act(() => {
       result.current.handleSelectionChange(["track-1"]);
     });
@@ -128,7 +134,10 @@ describe("useTrackSelection", () => {
 
   it("should do nothing (and not call mutate) when no tracks are selected", () => {
     // Arrange
-    const { result } = setup();
+    const { result } = setupActions();
+    act(() => {
+      useTrackSelectionStore.getState().clearSelection();
+    });
 
     // Act
     act(() => {
@@ -137,7 +146,7 @@ describe("useTrackSelection", () => {
 
     // Assert
     expect(mockMutate).not.toHaveBeenCalled();
-    expect(result.current.selectedTrackIds).toEqual([]);
+    expect(useTrackSelectionStore.getState().selectedTrackIds).toEqual([]);
   });
 
   it("should proxy the isPending flag as isDeleting", () => {
@@ -148,7 +157,7 @@ describe("useTrackSelection", () => {
     });
 
     // Act
-    const { result } = setup();
+    const { result } = setupActions();
 
     // Assert
     expect(result.current.isDeleting).toBe(true);
@@ -158,7 +167,7 @@ describe("useTrackSelection", () => {
     {
       name: "successful deletion",
       impl: (
-        _ids: Track["id"][],
+        _deleteData: unknown,
         { onSuccess }: { onSuccess: (res: unknown) => void }
       ) => {
         onSuccess({ success: ["track-1"], failed: [] });
@@ -168,7 +177,7 @@ describe("useTrackSelection", () => {
     {
       name: "failed deletion",
       impl: (
-        _ids: Track["id"][],
+        _deleteData: unknown,
         { onError }: { onError: (err: Error) => void }
       ) => {
         onError(new Error("Deletion failed"));
@@ -180,9 +189,9 @@ describe("useTrackSelection", () => {
   it.each(scenarios)("handleDeleteSelected – $name", ({ impl, expected }) => {
     // Arrange
     mockMutate.mockImplementation(impl);
-    const { result } = setup();
+    const { result } = setupActions();
     act(() => {
-      result.current.handleSelectionChange(["track-1"]);
+      useTrackSelectionStore.getState().handleSelectionChange(["track-1"]);
     });
 
     // Act
@@ -191,6 +200,8 @@ describe("useTrackSelection", () => {
     });
 
     // Assert
-    expect(result.current.selectedTrackIds).toEqual(expected);
+    expect(useTrackSelectionStore.getState().selectedTrackIds).toEqual(
+      expected
+    );
   });
 });
