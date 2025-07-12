@@ -71,6 +71,7 @@
     "generate:api": "openapi-zod-client \"${OPENAPI_URL:-http://localhost:8000/documentation/yaml}\" -o \"./src/generated/api.ts\" --export-schemas",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "proto:generate:build": "npm run generate:build --workspace=@music-app/proto",
     "test:ct": "playwright test -c playwright-ct.config.ts",

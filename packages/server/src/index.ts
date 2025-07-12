@@ -42,6 +42,10 @@ async function start() {
       ],
     });
 
+    fastify.get('/healthz', async (_req, reply) => {
+      return reply.code(200).send({ status: 'ok' });
+    });
+
     // Register static file serving for audio files
     await fastify.register(fastifyStatic, {
       root: config.storage.uploadsDir,

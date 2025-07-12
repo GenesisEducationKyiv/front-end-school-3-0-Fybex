@@ -55,8 +55,6 @@ for (const [groupName, prefixes] of Object.entries(chunkGroupPrefixes)) {
   chunkGroups[groupName] = pkgs;
 }
 
-console.log(chunkGroups);
-
 export const baseSharedConfig = {
   server: {
     port: 3000,

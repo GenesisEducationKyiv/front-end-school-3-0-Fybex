@@ -10,6 +10,7 @@
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
     "proto:generate": "npm run generate --workspace=@music-app/proto",
     "proto:build": "npm run build --workspace=@music-app/proto",
     "proto:generate:build": "npm run generate:build --workspace=@music-app/proto",
@@ -17,7 +18,12 @@
     "client:dev": "npm run dev --workspace=@music-app/client",
     "server:dev": "npm run dev:with-proto --workspace=@music-app/server",
     "server:test": "npm run test --workspace=@music-app/server",
-    "client:test": "npm run test:vitest --workspace=@music-app/client"
+    "server:start": "npm run start --workspace=@music-app/server",
+    "server:build-and-start": "npm run build --workspace=@music-app/server && npm run start --workspace=@music-app/server",
+    "client:preview": "npm run preview --workspace=@music-app/client",
+    "client:build-and-preview": "npm run build --workspace=@music-app/client && npm run preview --workspace=@music-app/client",
+    "client:test": "npm run test:vitest --workspace=@music-app/client",
+    "test:e2e": "npm run test:e2e --workspace=@music-app/client"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

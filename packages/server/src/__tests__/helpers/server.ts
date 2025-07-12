@@ -4,7 +4,7 @@ import path from 'path';
 import { type Client, createClient, type Transport } from '@connectrpc/connect';
 import { fastifyConnectPlugin } from '@connectrpc/connect-fastify';
 import { createConnectTransport } from '@connectrpc/connect-web';
-import { GenresService, HealthService, TracksService } from '@music-app/proto';
+import { GenresService, TracksService } from '@music-app/proto';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { afterAll, beforeAll } from 'vitest';
 
@@ -93,7 +93,6 @@ export async function buildServer(): Promise<{
   server: FastifyInstance;
   tracksClient: Client<typeof TracksService>;
   genresClient: Client<typeof GenresService>;
-  healthClient: Client<typeof HealthService>;
   transport: Transport;
 }> {
   try {
@@ -129,9 +128,8 @@ export async function buildServer(): Promise<{
     // Create clients for each service
     const tracksClient = createClient(TracksService, transport);
     const genresClient = createClient(GenresService, transport);
-    const healthClient = createClient(HealthService, transport);
 
-    return { server, tracksClient, genresClient, healthClient, transport };
+    return { server, tracksClient, genresClient, transport };
   } catch (error) {
     console.error('Error building gRPC server:', error);
     throw error;
@@ -142,7 +140,6 @@ export interface TestSetup {
   server: FastifyInstance;
   tracksClient: Client<typeof TracksService>;
   genresClient: Client<typeof GenresService>;
-  healthClient: Client<typeof HealthService>;
   transport: Transport;
 }
 

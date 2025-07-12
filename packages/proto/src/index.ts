@@ -8,10 +8,6 @@ export * from './generated/genres/v1/genres_pb.js';
 export * from './generated/tracks/v1/tracks-TracksService_connectquery.js';
 export * from './generated/tracks/v1/tracks_pb.js';
 
-// Health
-export * from './generated/health/v1/health-HealthService_connectquery.js';
-export * from './generated/health/v1/health_pb.js';
-
 export type ExcludeProtobufInternals<T> = {
   [K in keyof T as K extends `$${string}` ? never : K]: T[K];
 };

@@ -23,14 +23,6 @@
       "import": "./dist/generated/genres/v1/genres-GenresService_connectquery.js",
       "types": "./dist/generated/genres/v1/genres-GenresService_connectquery.d.ts"
     },
-    "./health": {
-      "default": "./dist/generated/health/v1/health_pb.js",
-      "types": "./dist/generated/health/v1/health_pb.d.ts"
-    },
-    "./health/connectquery": {
-      "import": "./dist/generated/health/v1/health-HealthService_connectquery.js",
-      "types": "./dist/generated/health/v1/health-HealthService_connectquery.d.ts"
-    },
     "./tracks": {
       "default": "./dist/generated/tracks/v1/tracks_pb.js",
       "types": "./dist/generated/tracks/v1/tracks_pb.d.ts"
@@ -60,6 +52,7 @@
     "generate": "buf generate",
     "generate:build": "npm run generate && npm run build",
     "lint": "buf lint",
+    "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run clean && npm run generate:build"
   },
   "type": "module",

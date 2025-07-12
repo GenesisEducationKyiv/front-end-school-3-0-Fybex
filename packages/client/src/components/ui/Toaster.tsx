@@ -21,6 +21,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
         } as React.CSSProperties
       }
       theme={isTheme(theme) ? theme : "system"}
+      toastOptions={{
+        duration: 50000,
+      }}
       {...props}
     />
   );

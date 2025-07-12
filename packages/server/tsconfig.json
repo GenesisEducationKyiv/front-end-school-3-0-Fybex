@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "strict": true,
     "outDir": "dist",
@@ -11,5 +11,5 @@
     "resolveJsonModule": true
   },
   "include": ["src/**/*", "eslint.config.ts"],
-  "exclude": ["node_modules", "dist", "src/__tests__/**/*", "**/*.test.ts"]
+  "exclude": ["node_modules", "dist"]
 }
