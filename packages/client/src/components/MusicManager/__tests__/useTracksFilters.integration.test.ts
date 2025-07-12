@@ -31,7 +31,10 @@ import {
   SORT_PARAM_VALUES,
   type FilterState,
 } from "../filter.config";
-import { useTrackSelection } from "../useTrackSelection";
+import {
+  useTrackSelectionActions,
+  useTrackSelectionStore,
+} from "../useTrackSelectionStore";
 import { useTracksFilters } from "../useTracksFilters";
 
 const createTestData = () => {
@@ -128,10 +131,15 @@ describe("useTracksFilters", () => {
 
   const setup = () => {
     const filtersResult = renderHook(() => useTracksFilters());
-    const selectionResult = renderHook(() => useTrackSelection());
+    const selectionActionsResult = renderHook(() => useTrackSelectionActions());
+
+    act(() => {
+      useTrackSelectionStore.getState().clearSelection();
+    });
+
     return {
       filters: filtersResult.result,
-      selection: selectionResult.result,
+      selectionActions: selectionActionsResult.result,
     };
   };
 
@@ -273,7 +281,7 @@ describe("useTracksFilters", () => {
   });
 
   it("should handle complete user workflow: filter -> select -> delete", () => {
-    const { filters, selection } = setup();
+    const { filters, selectionActions } = setup();
     const testData = createTestData();
     mockDeleteMutate.mockImplementation((deleteRequest, options) => {
       options.onSuccess({ success: deleteRequest.ids, failed: [] });
@@ -284,10 +292,12 @@ describe("useTracksFilters", () => {
       filters.current.setGenre(testData.genre);
     });
     act(() => {
-      selection.current.handleSelectionChange(testData.trackIds);
+      useTrackSelectionStore
+        .getState()
+        .handleSelectionChange(testData.trackIds);
     });
     act(() => {
-      selection.current.handleDeleteSelected();
+      selectionActions.current.handleDeleteSelected();
     });
 
     expect(filters.current.search).toBe(testData.search);
@@ -301,7 +311,7 @@ describe("useTracksFilters", () => {
         onError: expect.any(Function) as unknown,
       })
     );
-    expect(selection.current.selectedTrackIds).toEqual([]);
+    expect(useTrackSelectionStore.getState().selectedTrackIds).toEqual([]);
   });
 
   it("should restore filter state from URL on page load", () => {
@@ -322,7 +332,7 @@ describe("useTracksFilters", () => {
   });
 
   it("should handle delete failure gracefully", () => {
-    const { selection } = setup();
+    const { selectionActions } = setup();
     const { trackIds: trackIdsToDelete } = createTestData();
 
     mockDeleteMutate.mockImplementation((_deleteRequest, opts) => {
@@ -330,13 +340,15 @@ describe("useTracksFilters", () => {
     });
 
     act(() => {
-      selection.current.handleSelectionChange(trackIdsToDelete);
+      useTrackSelectionStore.getState().handleSelectionChange(trackIdsToDelete);
     });
     act(() => {
-      selection.current.handleDeleteSelected();
+      selectionActions.current.handleDeleteSelected();
     });
 
-    expect(selection.current.selectedTrackIds).toEqual(trackIdsToDelete);
+    expect(useTrackSelectionStore.getState().selectedTrackIds).toEqual(
+      trackIdsToDelete
+    );
     expect(mockDeleteMutate).toHaveBeenCalledWith(
       expect.objectContaining({
         ids: trackIdsToDelete,

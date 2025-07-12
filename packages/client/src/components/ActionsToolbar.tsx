@@ -1,6 +1,10 @@
 import { Trash2 } from "lucide-react";
 import { lazy, Suspense, useState } from "react";
 
+import {
+  useTrackSelectionActions,
+  useTrackSelectionStore,
+} from "@/components/MusicManager/useTrackSelectionStore";
 import { Button } from "@/components/ui/Button";
 import { DialogFallback } from "@/components/ui/DialogFallback";
 
@@ -11,19 +15,16 @@ const BulkDeleteDialog = lazy(
   () => import("@/components/TrackDialogs/BulkDeleteDialog")
 );
 
-interface ActionsToolbarProps {
-  selectedCount: number;
-  onDelete: () => void;
-  isDeleting?: boolean;
-}
-
-export default function ActionsToolbar({
-  selectedCount,
-  onDelete,
-  isDeleting = false,
-}: ActionsToolbarProps) {
+export default function ActionsToolbar() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+
+  const selectedTrackIds = useTrackSelectionStore(
+    (state) => state.selectedTrackIds
+  );
+  const selectedCount = selectedTrackIds.length;
+
+  const { handleDeleteSelected, isDeleting } = useTrackSelectionActions();
 
   return (
     <div className="flex items-center gap-2">
@@ -66,7 +67,7 @@ export default function ActionsToolbar({
             isDeleting={isDeleting}
             open={isBulkDeleteDialogOpen}
             selectedCount={selectedCount}
-            onConfirm={onDelete}
+            onConfirm={handleDeleteSelected}
             onOpenChange={setIsBulkDeleteDialogOpen}
           />
         </Suspense>
