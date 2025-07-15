@@ -16,6 +16,9 @@ import { useApiMutation } from "@/hooks/useApiMutation";
 import { useApiQuery } from "@/hooks/useApiQuery";
 
 export function getTrackAudioUrl(audioFile: string): string {
+  if (audioFile.startsWith("/")) {
+    return audioFile;
+  }
   const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
   return `${baseUrl}/api/tracks/audio/${audioFile}`;
 }

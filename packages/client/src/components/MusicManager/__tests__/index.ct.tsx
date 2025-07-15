@@ -1,7 +1,7 @@
-import { TimestampSchema } from "@bufbuild/protobuf/wkt";
 import { faker } from "@faker-js/faker";
 import {
   create,
+  dateToTimestamp,
   type ExcludeProtobufInternals,
   GenresService,
   GetGenresResponseSchema,
@@ -24,14 +24,7 @@ const mockGenres = ["Rock", "Jazz", "Classical", "Electronic", "Country"];
 
 type Track = ExcludeProtobufInternals<ProtobufTrack>;
 
-function dateToTimestamp(date: Date) {
-  return create(TimestampSchema, {
-    seconds: BigInt(Math.floor(date.getTime() / 1000)),
-    nanos: (date.getTime() % 1000) * 1000000,
-  });
-}
-
-const generateMockTrack = (index = 0): Track => {
+function generateMockTrack(index = 0): Track {
   const randomGenre = mockGenres[index % mockGenres.length];
   if (!randomGenre) throw new Error("No genre available");
 
@@ -48,7 +41,7 @@ const generateMockTrack = (index = 0): Track => {
     createdAt: dateToTimestamp(faker.date.past({ years: 30 })),
     updatedAt: dateToTimestamp(faker.date.recent()),
   };
-};
+}
 
 const mockTracks = Array.from({ length: 6 }, (_, index) =>
   generateMockTrack(index)

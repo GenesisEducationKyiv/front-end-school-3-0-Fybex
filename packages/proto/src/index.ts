@@ -8,6 +8,9 @@ export * from './generated/genres/v1/genres_pb.js';
 export * from './generated/tracks/v1/tracks-TracksService_connectquery.js';
 export * from './generated/tracks/v1/tracks_pb.js';
 
+// Utilities
+export { dateToTimestamp } from './dateToTimestamp.js';
+
 export type ExcludeProtobufInternals<T> = {
   [K in keyof T as K extends `$${string}` ? never : K]: T[K];
 };

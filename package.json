@@ -23,7 +23,9 @@
     "client:preview": "npm run preview --workspace=@music-app/client",
     "client:build-and-preview": "npm run build --workspace=@music-app/client && npm run preview --workspace=@music-app/client",
     "client:test": "npm run test:vitest --workspace=@music-app/client",
-    "test:e2e": "npm run test:e2e --workspace=@music-app/client"
+    "test:e2e": "npm run test:e2e --workspace=@music-app/client",
+    "client:storybook": "npm run storybook --workspace=@music-app/client",
+    "client:build-storybook": "npm run build-storybook --workspace=@music-app/client"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

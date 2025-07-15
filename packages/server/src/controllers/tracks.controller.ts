@@ -1,10 +1,10 @@
 import { create } from '@bufbuild/protobuf';
-import { type Timestamp, TimestampSchema } from '@bufbuild/protobuf/wkt';
 import { Code, ConnectError } from '@connectrpc/connect';
 import {
   type CreateTrackRequest,
   type CreateTrackResponse,
   CreateTrackResponseSchema,
+  dateToTimestamp,
   type DeleteFileRequest,
   type DeleteFileResponse,
   DeleteFileResponseSchema,
@@ -46,14 +46,6 @@ import {
   updateTrack,
 } from '../utils/db.js';
 import { createSlug } from '../utils/slug.js';
-
-// Helper function to convert Date to Timestamp
-function dateToTimestamp(date: Date): Timestamp {
-  return create(TimestampSchema, {
-    seconds: BigInt(Math.floor(date.getTime() / 1000)),
-    nanos: (date.getTime() % 1000) * 1000000,
-  });
-}
 
 // Helper function to convert database track to protobuf Track
 function dbTrackToProto(dbTrack: DbTrack): ProtoTrack {

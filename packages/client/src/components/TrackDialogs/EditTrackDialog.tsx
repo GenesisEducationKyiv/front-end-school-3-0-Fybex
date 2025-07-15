@@ -108,5 +108,4 @@ function EditTrackDialog({ track, open, onOpenChange }: EditTrackDialogProps) {
     </Dialog>
   );
 }
-
 export default EditTrackDialog;
