@@ -17,7 +17,6 @@ import {
   SORT_OPTIONS,
   SORT_ORDER_OPTIONS,
 } from "./filter.config";
-import { useTrackSelection } from "./useTrackSelection";
 import { useTracksFilters } from "./useTracksFilters";
 
 const INITIAL_DATA = {
@@ -40,8 +39,7 @@ const AudioPlayerFallback = () => (
 );
 
 export default function MusicManager() {
-  const { data: genresResponse } = useGetGenres();
-  const genres = genresResponse?.genres ?? [];
+  const genres = useGetGenres();
 
   const {
     genre,
@@ -79,12 +77,15 @@ export default function MusicManager() {
 
   const totalPages = paginatedData.meta?.totalPages ?? DEFAULT_PAGE;
 
-  const selection = useTrackSelection();
-
   const currentTrack = useAudioPlayerStore((state) => state.track);
   const isPlaying = useAudioPlayerStore((state) => state.isPlaying);
   const setTrack = useAudioPlayerStore((state) => state.setTrack);
   const setIsPlaying = useAudioPlayerStore((state) => state.setIsPlaying);
+
+  const handlePaginationChange = (newPage: number, newLimit: number) => {
+    setPage(newPage);
+    setLimit(newLimit);
+  };
 
   const handleTrackClick = (clickedTrack: Track) => {
     if (clickedTrack.id === currentTrack?.id) {
@@ -111,11 +112,7 @@ export default function MusicManager() {
           onSortOrderChange={setOrder}
         />
 
-        <ActionsToolbar
-          isDeleting={selection.isDeleting}
-          selectedCount={selection.selectedTrackIds.length}
-          onDelete={selection.handleDeleteSelected}
-        />
+        <ActionsToolbar />
       </div>
 
       <AppErrorBoundary
@@ -131,12 +128,8 @@ export default function MusicManager() {
           pageSizes={pageSizes}
           totalPages={totalPages}
           tracks={tracks}
-          onPaginationChange={(newPage: number, newLimit: number) => {
-            setPage(newPage);
-            setLimit(newLimit);
-          }}
+          onPaginationChange={handlePaginationChange}
           onPlayTrack={handleTrackClick}
-          onSelectionChange={selection.handleSelectionChange}
         />
       </AppErrorBoundary>
 

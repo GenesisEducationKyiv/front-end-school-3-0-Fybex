@@ -25,8 +25,7 @@ interface EditTrackDialogProps {
 }
 
 function EditTrackDialog({ track, open, onOpenChange }: EditTrackDialogProps) {
-  const { data: genresResponse } = useGetGenres();
-  const availableGenres = genresResponse?.genres ?? [];
+  const availableGenres = useGetGenres();
 
   const form = useForm<TrackFormData>({
     resolver: zodResolver(trackFormSchema),
