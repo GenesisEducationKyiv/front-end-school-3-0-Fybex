@@ -1,6 +1,5 @@
 import { X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
 
 import { useAudioPlayerStore } from "@/components/AudioPlayer/useAudioPlayerStore";
 import { Button } from "@/components/ui/Button";
@@ -12,7 +11,9 @@ import SeekBar from "./SeekBar";
 import TrackInfo from "./TrackInfo";
 import VolumeControl from "./VolumeControl";
 
-export default function AudioPlayer() {
+export default function AudioPlayer({
+  onClose,
+}: { onClose?: () => void } = {}) {
   const playerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -26,6 +27,7 @@ export default function AudioPlayer() {
   const [volume, setVolume] = useState(1);
   const [previousVolume, setPreviousVolume] = useState(1);
   const [isSeeking, setIsSeeking] = useState(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
 
   const audioUrl = track?.audioFile ? getTrackAudioUrl(track.audioFile) : null;
   useEffect(() => {
@@ -183,7 +185,10 @@ export default function AudioPlayer() {
           className="rounded-full hover:bg-muted w-8 h-8"
           size="icon"
           variant="ghost"
-          onClick={close}
+          onClick={() => {
+            close();
+            if (onClose) onClose();
+          }}
         >
           <X className="w-5 h-5" />
         </Button>
@@ -195,7 +200,9 @@ export default function AudioPlayer() {
         onEnded={handleEnded}
         onError={(e) => {
           console.error("Audio error:", e);
-          toast.error("Error playing audio");
+          setAudioError(
+            "Unable to play audio. The file may be missing or corrupted."
+          );
           setIsPlaying(false);
         }}
         onLoadedMetadata={handleLoadedMetadata}
@@ -206,6 +213,26 @@ export default function AudioPlayer() {
       >
         Your browser does not support the audio element.
       </audio>
+
+      {audioError && (
+        <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10">
+          <div className="flex items-center gap-4">
+            <span className="text-destructive font-semibold">{audioError}</span>
+            <Button
+              aria-label="Close player"
+              className="rounded-full hover:bg-muted w-8 h-8"
+              size="icon"
+              variant="ghost"
+              onClick={() => {
+                close();
+                if (onClose) onClose();
+              }}
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
