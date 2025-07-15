@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Music } from "lucide-react";
 import { fn } from "storybook/test";
 
 import { Button } from "./Button";
@@ -100,7 +101,7 @@ export const Large: Story = {
 export const Icon: Story = {
   args: {
     size: "icon",
-    children: "🎵",
+    children: <Music className="w-5 h-5" />,
   },
 };
 
