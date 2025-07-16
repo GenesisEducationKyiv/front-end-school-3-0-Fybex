@@ -1,0 +1,35 @@
+name: "Setup"
+description: "Setup Node.js and install dependencies"
+
+inputs:
+  node-version:
+    description: "Node.js version to use"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: "npm"
+
+    - name: Restore cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          node_modules
+          packages/*/node_modules
+        key: deps-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        if [ ! -d "node_modules" ]; then
+          npm ci
+        fi
+
+    - name: Generate proto files
+      shell: bash
+      run: npm run proto:generate:build 

@@ -1,0 +1,52 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    /* Paths */
+    "baseUrl": ".",
+    "composite": true,
+    "exactOptionalPropertyTypes": true,
+    "forceConsistentCasingInFileNames": true,
+    "incremental": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleDetection": "force",
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    "noUncheckedSideEffectImports": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    /* Linting */
+    "strict": true,
+    "target": "ES2022",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "useDefineForClassFields": true,
+    /* Interop constraints */
+    "verbatimModuleSyntax": true
+  },
+  "include": [
+    "src",
+    "vite-env.d.ts",
+    "vitest.shims.d.ts"
+  ]
+}
